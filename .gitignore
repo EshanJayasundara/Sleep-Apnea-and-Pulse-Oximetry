@@ -9,3 +9,4 @@ objects
 *.pem
 dist
 sleepdataspo2.egg-info
+test.ipynb

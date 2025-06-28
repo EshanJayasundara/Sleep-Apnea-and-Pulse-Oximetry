@@ -5,6 +5,8 @@ Co-Author 2:
 Last Modified: 2025/06/27 by Eshan Jayasundara
 """
 
+import matplotlib
+matplotlib.use("Agg")  # Use a backend that does not need a display
 import matplotlib.pyplot as plt
 import seaborn as sns
 from abc import ABC, abstractmethod

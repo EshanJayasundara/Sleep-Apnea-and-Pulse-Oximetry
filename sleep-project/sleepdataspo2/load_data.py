@@ -16,6 +16,8 @@ class DataLoaderInterface(ABC):
         pass
     def read_edf(self, file_path: str) -> pd.DataFrame:
         pass
+    def read_parquet(self, file_path: str) -> pd.DataFrame:
+        pass
 
 class PandasDataLoaderSHHS(DataLoaderInterface):
     def __init__(self):
@@ -28,7 +30,7 @@ class PandasDataLoaderSHHS(DataLoaderInterface):
             df = pd.read_csv(filepath_or_buffer=file_path)
         except Exception as e:
             print("Error reading CSV file:")
-            print(traceback.format_exc(e))
+            print(e)
         return df
     
     def read_edf(self, file_path: str) -> pd.DataFrame:
@@ -46,7 +48,17 @@ class PandasDataLoaderSHHS(DataLoaderInterface):
             df['time'] = times
         except Exception as e:
             print("Error reading EDF file:")
-            print(traceback.format_exc(e))
+            print(e)
+        return df
+    
+    def read_parquet(self, file_path:str) -> pd.DataFrame:
+        if not file_path.endswith(".parquet"):
+            raise ValueError("Invalid extension! `.parquet` is required.")
+        try:
+            df = pd.read_parquet(filepath_or_buffer=file_path)
+        except Exception as e:
+            print("Error reading PARQUET file:")
+            print(e)
         return df
 
 class DataLoader(DataLoaderInterface):
@@ -58,3 +70,6 @@ class DataLoader(DataLoaderInterface):
     
     def read_edf(self, file_path):
         return self._data_loader.read_edf(file_path)
+    
+    def read_parquet(self, file_path):
+        return self._data_loader.read_parquet(file_path)
