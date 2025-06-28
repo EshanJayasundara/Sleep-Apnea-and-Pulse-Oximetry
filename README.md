@@ -58,9 +58,3 @@ We further propose a novel deep learning framework based on learned embeddings t
 - All encryption/decryption for the connection happens automatically via TLS.
 
 - You never handle or need the private key yourself.
-
----
-
-## Please refer the instructions in below URL:
-
-https://projects.ce.pdn.ac.lk/docs/how-to-add-a-project
