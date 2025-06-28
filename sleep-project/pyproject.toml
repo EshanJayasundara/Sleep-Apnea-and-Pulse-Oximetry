@@ -1,0 +1,25 @@
+[project]
+name = "sleepdataspo2"
+version = "0.1.0"
+description = "Download .edf files from the sleepdata.org and convert them  into .csv containing time and SaO2 signal. Then use that data to calculate OxygenDesaturationIndex."
+readme = "README.md"
+requires-python = ">=3.11"
+
+authors = [
+    {name = "Eshan Jayasundara", email = "eshan@ieee.org"}
+]
+
+dependencies = [
+    "mne==1.9.0",  # Add your runtime dependencies here
+    "pandas==2.2.2",
+    "numpy==1.26.4",
+    "pobm>1",
+    "matplotlib==3.8.4",
+    "seaborn==0.13.2",
+]
+
+
+
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
