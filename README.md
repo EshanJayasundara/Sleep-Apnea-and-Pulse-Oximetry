@@ -44,8 +44,10 @@ We further propose a novel deep learning framework based on learned embeddings t
 5. `pip install dist/sleepdata_spo2-0.1.0-py3-none-any.whl`
 6. `cd ../usage`
 7. place `.env` (which contains `NSRR_TOKEN`) and `cert.pem` (which used to verify the identity of a server. Since we only download files we don't need a private key) files into `usage` folder.
-8. `python -m sleepdataspo2.download_shhs -d shhs1 -s 200028 -e 200030`
-9. `python -m sleepdata_spo2.create_odi -p data/shhs/polysomnography/edfs/shhs1 -n ODI -s data`
+8. `mkdir data`
+9. `cd ..`
+10. `python -m sleepdataspo2.download_shhs -d shhs1 -s 200028 -e 200030`
+11. `python -m sleepdata_spo2.create_odi -p data/shhs/polysomnography/edfs/shhs1 -n ODI -s data`
 
 #### Here’s why only public `cert.pem` is enough:
 
