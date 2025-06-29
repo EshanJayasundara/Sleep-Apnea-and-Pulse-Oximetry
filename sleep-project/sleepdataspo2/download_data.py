@@ -2,7 +2,7 @@
 Author: Eshan Jayasundara
 Co-Author 1: 
 Co-Author 2:
-Last Modified: 2025/06/28 by Eshan Jayasundara
+Last Modified: 2025/06/29 by Eshan Jayasundara
 """
 
 from abc import ABC, abstractmethod
@@ -20,28 +20,16 @@ from sleepdataspo2 import BASE_URL, MAX_RETRIES
 
 class DownloaderInterface(ABC):
     @abstractmethod
-    def download(self, dataset: str, file_name: str, token: str, download_path: str, max_threads: int) -> None:
-        pass
-    @abstractmethod
-    def preapre_csv(self, path: str, file_name: str) -> None:
-        pass
-    @abstractmethod
-    def preapre_parquet(self, path: str, file_name: str) -> None:
-        pass
-    @abstractmethod
-    def delete_edf(self, path: str, file_name: str) -> None:
-        pass
-    @abstractmethod
-    def preprocess(self, path: str, file_name: str) -> None:
+    def download(self, dataset: str, file_name: str, token: str, nsrr_path:str, download_path: str) -> None:
         pass
 
 class DownloaderNSRR(DownloaderInterface):
     def __init__(self):
         pass
 
-    def download(self, dataset: str, file_name: str, token: str, download_path: str, max_threads: int):
-        file_path = f"polysomnography/edfs/{dataset}/{file_name}.edf"
-        download_url = f"{BASE_URL}/datasets/shhs/files/a/{token}/m/nsrr-gem-v1-0-0/{file_path}"
+    def download(self, dataset: str, file_name: str, token: str, nsrr_path:str, download_path: str) -> None:
+        file_path = f"{nsrr_path}/{file_name}.edf"
+        download_url = f"{BASE_URL}/datasets/{dataset}/files/a/{token}/m/nsrr-gem-v1-0-0/{file_path}"
         download_loc = f"{download_path}/{file_name}.edf"
         error = None
         partial = True
@@ -89,85 +77,3 @@ class DownloaderNSRR(DownloaderInterface):
                 return "fail"
 
         return os.path.getsize(download_loc)
-
-        
-    def preapre_csv(self, path, file_name):
-        reader = DataLoader(PandasDataLoaderSHHS())
-        try:
-            df = reader.read_edf(file_path=f"{path}/{file_name}.edf")
-            df = df[['time', 'SaO2']]
-            df.to_csv(path_or_buf=f"{path}/{file_name}.csv")
-            print(f"✔ Created: {path}/{file_name}.csv")
-        except Exception as e:
-            print(e)
-
-    def preapre_parquet(self, path, file_name):
-        reader = DataLoader(PandasDataLoaderSHHS())
-        try:
-            df = reader.read_edf(file_path=f"{path}/{file_name}.edf")
-            df = df[['time', 'SaO2']]
-            df.to_parquet(path=f"{path}/{file_name}.parquet")
-            print(f"✔ Created: {path}/{file_name}.parquet")
-        except Exception as e:
-            print(e)
-
-    def delete_edf(self, path, file_name):
-        try:
-            if os.path.exists(f"{path}/{file_name}.edf"):
-                os.remove(f"{path}/{file_name}.edf")
-                print(f"✔ Removed: {path}/{file_name}.edf")
-            else:
-                print(f"✘ Path does not exists: {path}/{file_name}.edf")
-        except Exception as e:
-            print(e)
-
-    def preprocess(self, path, file_name):
-        runner = RunSHHS()
-        odi, _ = runner.run_single(f"{path}/{file_name}.edf")
-        odi_path = os.path.join(path, "ODI.csv")
-
-        # Extract just the numeric part of the file_name (e.g., "200001" from "shhs1-200001")
-        patient_id = file_name.split("-")[-1]
-
-        # Load or create the ODI.csv
-        if os.path.exists(odi_path):
-            df = pd.read_csv(odi_path, index_col=0)
-        else:
-            df = pd.DataFrame(columns=["OxygenDesaturationIndex"])
-            
-        # Add or update the ODI value
-        df.loc[patient_id] = odi
-        # Save it
-        df.to_csv(odi_path)
-        print(f"✔ ODI updated for {file_name}")
-
-
-class DownloaderNSRRFcade:
-    def __init__(self):
-        self._downloader = DownloaderNSRR()
-
-    def download(self, dataset: str, file_names: List[str], token: str, download_path: str, max_threads: int):
-        def download_single(dataset:str, file_name: str, token: str, download_path: str):
-            os.makedirs(download_path, exist_ok=True)
-            # check if the file already downloaded
-            file_loc = f"{download_path}/{file_name}.edf"
-            if os.path.exists(file_loc):
-                print(f"✔ Download terminated, file already exists: {file_loc}.edf")
-                self._downloader.preprocess(path=download_path, file_name=file_name)
-                self._downloader.delete_edf(path=download_path, file_name=file_name)
-                return
-            self._downloader.download(dataset=dataset, file_name=file_name, token=token, download_path=download_path, max_threads=max_threads)
-            self._downloader.preprocess(path=download_path, file_name=file_name)
-            self._downloader.delete_edf(path=download_path, file_name=file_name)
-
-        with ThreadPoolExecutor(max_workers=max_threads) as executor:
-            futures = [
-                        executor.submit(download_single, dataset, file_name, token, download_path)
-                        for file_name in file_names
-                    ]
-
-            for future in as_completed(futures):
-                try:
-                    future.result()  # To raise exceptions if any
-                except Exception as e:
-                    print(f"Error downloading: {e}")

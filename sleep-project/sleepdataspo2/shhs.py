@@ -2,9 +2,10 @@
 Author: Eshan Jayasundara
 Co-Author 1: 
 Co-Author 2:
-Last Modified: 2025/06/28 by Eshan Jayasundara
+Last Modified: 2025/06/29 by Eshan Jayasundara
 """
 
+from sleepdataspo2.run_pipeline import *
 from sleepdataspo2.download_data import *
 from dotenv import load_dotenv, find_dotenv
 import argparse
@@ -21,6 +22,27 @@ def main():
         type=str,             # type of argument
         required=True,      # required
         help="short name of the dataset in sleepdata.org"  # help message
+    )
+
+    parser.add_argument(
+        "-p", "--prefix",             # argument flag
+        type=str,             # type of argument
+        required=True,      # required
+        help="prefix before the id of the edf file"  # help message
+    )
+
+    parser.add_argument(
+        "-df", "--download_from",             # argument flag
+        type=str,             # type of argument
+        required=True,      # required
+        help="file path in the nsrr web site"  # help message
+    )
+
+    parser.add_argument(
+        "-dt", "--download_to",             # argument flag
+        type=str,             # type of argument
+        required=True,      # required
+        help="file path where to download in the local machine"  # help message
     )
 
     parser.add_argument(
@@ -71,7 +93,7 @@ def main():
     elif args.start == None and args.end == None and args.list == None:
         raise ValueError("one of '--start and --end' or --list should be provided")
     
-    downloader = DownloaderNSRRFcade()
+    runner = RunSHHS(DownloaderNSRR())
 
     if args.list:
         range_list = args.list.split(" ")
@@ -80,15 +102,16 @@ def main():
 
     files_to_download = []
     for i in range_list:
-        files_to_download.append(f"{args.dataset}-{i}")
+        files_to_download.append(f"{args.prefix}-{i}")
 
     print(files_to_download)
-
-    downloader.download(
+    
+    runner.run_parallel(
         dataset=args.dataset, 
         file_names=files_to_download, 
         token=os.environ["NSRR_TOKEN"], 
-        download_path=f"data/shhs/polysomnography/edfs/{args.dataset}", 
+        nsrr_path=args.download_from,
+        download_path=f"{args.download_to}/{args.dataset}/{args.download_from}", 
         max_threads=args.max_threads
         )
 
