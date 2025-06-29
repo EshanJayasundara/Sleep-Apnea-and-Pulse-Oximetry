@@ -26,7 +26,7 @@ class CleanFeaturesInterface(ABC):
 
         return clean
 
-class CleanSaO2SHHS(CleanFeaturesInterface):
+class CleanSpO2(CleanFeaturesInterface):
     def __init__(self):
         pass
 

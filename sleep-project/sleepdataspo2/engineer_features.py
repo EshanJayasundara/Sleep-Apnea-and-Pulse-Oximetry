@@ -14,7 +14,7 @@ class EngineerFeaturesInterface(ABC):
     def compute_single(self, spo2: pd.Series, sampling_rate: int, drop_threshold: float, min_duration: int) -> float:
         pass
 
-class EngineerOdiSHHS(EngineerFeaturesInterface):
+class EngineerOdi(EngineerFeaturesInterface):
     def __init__(self):
         pass
 

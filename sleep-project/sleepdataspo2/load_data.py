@@ -19,7 +19,7 @@ class DataLoaderInterface(ABC):
     def read_parquet(self, file_path: str) -> pd.DataFrame:
         pass
 
-class PandasDataLoaderSHHS(DataLoaderInterface):
+class PandasDataLoader(DataLoaderInterface):
     def __init__(self):
         pass
 

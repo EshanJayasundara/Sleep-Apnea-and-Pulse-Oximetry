@@ -20,7 +20,7 @@ class PlotGraphsInterface(ABC):
     def plot_one_signal(self, signal: pd.Series, figsize: Tuple[float, float], title: str, xlabel: str, ylabel: str, save_path: str, name: str) -> None:
         pass
 
-class PlotGraphsSHHS(PlotGraphsInterface):
+class PlotGraphsNSRR(PlotGraphsInterface):
     def __init__(self):
         pass
 

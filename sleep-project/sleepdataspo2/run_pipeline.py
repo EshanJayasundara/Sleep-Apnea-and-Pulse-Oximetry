@@ -20,59 +20,62 @@ from sleepdataspo2.download_data import  *
 
 class RunInterface(ABC):
     @abstractmethod
-    def preapre_csv(self, path: str, file_name: str) -> None:
+    def preapre_csv(self, dataset, download_from, download_to, file_name, spo2_channel_name) -> None:
         pass
     @abstractmethod
-    def preapre_parquet(self, path: str, file_name: str) -> None:
+    def preapre_parquet(self, dataset, download_from, download_to, file_name, spo2_channel_name) -> None:
         pass
     @abstractmethod
-    def delete_edf(self, path: str, file_name: str) -> None:
+    def delete_edf(self, dataset, download_from, download_to, file_name) -> None:
         pass
     @abstractmethod
-    def preprocess(self, path: str, file_name: str) -> None:
+    def preprocess(self, dataset, download_from, download_to, file_name, spo2_channel_name) -> None:
         pass
     @abstractmethod
-    def calculate_odi(self, file_path: str) -> Tuple[float, str]:
+    def calculate_odi(self, dataset, download_from, download_to, file_name, spo2_channel_name) -> Tuple[float, str]:
         pass
     @abstractmethod
-    def process_single(self, dataset:str, file_name: str, token: str, nsrr_path: str, download_path: str) -> None:
+    def process_single(self, dataset:str, file_name: str, token: str, download_from:str, download_to: str, spo2_channel_name: str) -> None:
         pass
     @abstractmethod
-    def run_sequential(self, dataset: str, file_names: List[str], token: str, nsrr_path: str, download_path: str) -> pd.Series:
+    def run_sequential(self, dataset: str, file_names: List[str], token: str, download_from: str, download_to: str, spo2_channel_name: str) -> pd.Series:
         pass
     @abstractmethod
-    def run_parallel(self, dataset: str, file_names: List[str], token: str, nsrr_path:str, download_path: str, max_threads: int) -> pd.Series:
+    def run_parallel(self, dataset: str, file_names: List[str], token: str, download_from: str, download_to: str, spo2_channel_name: str, max_threads: int) -> pd.Series:
         pass
     # def write_pickle(self, objs_path: str, obj: object, name: str) -> None:
     #     os.makedirs(objs_path, exist_ok=True)
     #     with open(f"{objs_path}/{name}.pkl", 'wb') as f:
     #         pickle.dump(obj, f)
 
-class RunSHHS(RunInterface):
+class Run(RunInterface):
     def __init__(self, downloader: DownloaderNSRR):
         self._downloader = downloader
 
-    def preapre_csv(self, path, file_name):
-        reader = DataLoader(PandasDataLoaderSHHS())
+    def preapre_csv(self, dataset, download_from, download_to, file_name, spo2_channel_name) -> None:
+        path = f"{download_to}/{dataset}/{download_from}"
+        reader = DataLoader(PandasDataLoader())
         try:
             df = reader.read_edf(file_path=f"{path}/{file_name}.edf")
-            df = df[['time', 'SaO2']]
+            df = df[['time', spo2_channel_name]]
             df.to_csv(path_or_buf=f"{path}/{file_name}.csv")
             print(f"✔ Created: {path}/{file_name}.csv")
         except Exception as e:
             print(e)
 
-    def preapre_parquet(self, path, file_name):
-        reader = DataLoader(PandasDataLoaderSHHS())
+    def preapre_parquet(self, dataset, download_from, download_to, file_name, spo2_channel_name) -> None:
+        path = f"{download_to}/{dataset}/{download_from}"
+        reader = DataLoader(PandasDataLoader())
         try:
             df = reader.read_edf(file_path=f"{path}/{file_name}.edf")
-            df = df[['time', 'SaO2']]
+            df = df[['time', spo2_channel_name]]
             df.to_parquet(path=f"{path}/{file_name}.parquet")
             print(f"✔ Created: {path}/{file_name}.parquet")
         except Exception as e:
             print(e)
 
-    def delete_edf(self, path, file_name):
+    def delete_edf(self, dataset, download_from, download_to, file_name) -> None:
+        path = f"{download_to}/{dataset}/{download_from}"
         try:
             if os.path.exists(f"{path}/{file_name}.edf"):
                 os.remove(f"{path}/{file_name}.edf")
@@ -82,8 +85,9 @@ class RunSHHS(RunInterface):
         except Exception as e:
             print(e)
 
-    def preprocess(self, path: str, file_name: str) -> None:
-        odi, _ = self.calculate_odi(f"{path}/{file_name}.edf")
+    def preprocess(self, dataset, download_from, download_to, file_name, spo2_channel_name) -> None:
+        path = f"{download_to}/{dataset}/{download_from}"
+        odi, _ = self.calculate_odi(dataset, download_from, download_to, f"{file_name}.edf", spo2_channel_name)
         odi_path = os.path.join(path, "ODI.csv")
 
         # Extract just the numeric part of the file_name (e.g., "200001" from "shhs1-200001")
@@ -101,18 +105,20 @@ class RunSHHS(RunInterface):
         df.to_csv(odi_path)
         print(f"✔ ODI updated for {file_name}")
 
-    def calculate_odi(self, file_path: str) -> Tuple[float, str]:
-        reader = DataLoader(PandasDataLoaderSHHS())
+    def calculate_odi(self, dataset, download_from, download_to, file_name,  spo2_channel_name) -> Tuple[float, str]:
+        path = f"{download_to}/{dataset}/{download_from}"
+        reader = DataLoader(PandasDataLoader())
         # scaler = MinMaxScaler((0, 100))
-        cleaner = CleanFeatures(CleanSaO2SHHS())
-        engineer = EngineerFeatures(EngineerOdiSHHS())
-        plotter = PlotGraphs(PlotGraphsSHHS())
+        cleaner = CleanFeatures(CleanSpO2())
+        engineer = EngineerFeatures(EngineerOdi())
+        plotter = PlotGraphs(PlotGraphsNSRR())
 
-        if file_path.endswith(".edf"):
+        file_path = f"{path}/{file_name}"
+        if file_name.endswith(".edf"):
             df = reader.read_edf(file_path=file_path)
-        elif file_path.endswith(".csv"):
+        elif file_name.endswith(".csv"):
             df = reader.read_csv(file_path=file_path)
-        elif file_path.endswith(".parquet"):
+        elif file_name.endswith(".parquet"):
             df = reader.read_parquet(file_path=file_path)
         # resample to 1Hz
         df = df[[True if x - int(x) == 0 else False for x in df.time]]
@@ -120,41 +126,42 @@ class RunSHHS(RunInterface):
         df = df.set_index("time")
         # apply the scaler
         # scaled_df = pd.DataFrame(scaler.fit_transform(df), columns=df.columns, index=df.index)
-        spo2 = cleaner.clean_single(df.SaO2)
+        spo2 = cleaner.clean_single(df[spo2_channel_name])
         pd.DataFrame({
                 "time": [i for i in range(len(spo2))],
                 "SaO2": spo2.tolist()
-            }).set_index("time").to_parquet(path=f"{file_path.split(".")[0]}_cleaned.parquet")
+            }).set_index("time").to_parquet(path=f"{path}/{file_name.split(".")[0]}_cleaned.parquet")
         odi = engineer.compute_single(spo2=spo2)
 
-        name = file_path.split("/")[-1].split(".")[0]
+        name = file_name.split(".")[0]
 
-        plotter.plot_one_signal(signal=df.SaO2, title=f"{name} Original Signal", save_path="images/shhs1/SaO2/original", name=name)
-        plotter.plot_one_signal(signal=spo2, title=f"{name} Cleaned Signal", save_path="images/shhs1/SaO2/cleaned", name=name)
+        plotter.plot_one_signal(signal=df[spo2_channel_name], title=f"{name} Original Signal", save_path=f"{download_to}/{dataset}/images/original", name=name)
+        plotter.plot_one_signal(signal=spo2, title=f"{name} Cleaned Signal", save_path=f"{download_to}/{dataset}/images/cleaned", name=name)
 
         return odi, name
     
-    def process_single(self, dataset:str, file_name: str, token: str, nsrr_path: str, download_path: str) -> None:
+    def process_single(self, dataset:str, file_name: str, token: str, download_from:str, download_to: str, spo2_channel_name:str) -> None:
+            download_path = f"{download_to}/{dataset}/{download_from}"
             os.makedirs(download_path, exist_ok=True)
             # check if the file already downloaded
             file_loc = f"{download_path}/{file_name}.edf"
             if os.path.exists(file_loc):
                 print(f"✔ Download terminated, file already exists: {file_loc}.edf")
-                self.preprocess(path=download_path, file_name=file_name)
-                self.delete_edf(path=download_path, file_name=file_name)
+                self.preprocess(dataset=dataset, download_from=download_from, download_to=download_to, file_name=file_name, spo2_channel_name=spo2_channel_name)
+                self.delete_edf(dataset=dataset, download_from=download_from, download_to=download_to, file_name=file_name)
                 return
-            self._downloader.download(dataset=dataset, file_name=file_name, token=token, nsrr_path=nsrr_path, download_path=download_path)
-            self.preprocess(path=download_path, file_name=file_name)
-            self.delete_edf(path=download_path, file_name=file_name)
+            self._downloader.download(dataset=dataset, file_name=file_name, token=token, download_from=download_from, download_to=download_to)
+            self.preprocess(dataset=dataset, download_from=download_from, download_to=download_to, file_name=file_name, spo2_channel_name=spo2_channel_name)
+            self.delete_edf(dataset=dataset, download_from=download_from, download_to=download_to, file_name=file_name)
 
-    def run_sequential(self, dataset: str, file_names: List[str], token: str, nsrr_path: str, download_path: str) -> None:
+    def run_sequential(self, dataset: str, file_names: List[str], token: str, download_from: str, download_to: str, spo2_channel_name: str) -> None:
         for file_name in file_names:
-            self.process_single(dataset, file_name, token, nsrr_path, download_path)
+            self.process_single(dataset, file_name, token, download_from, download_to, spo2_channel_name)
 
-    def run_parallel(self, dataset: str, file_names: List[str], token: str, nsrr_path: str, download_path: str, max_threads: int) -> None:
+    def run_parallel(self, dataset: str, file_names: List[str], token: str, download_from: str, download_to: str, spo2_channel_name: str, max_threads: int) -> None:
         with ThreadPoolExecutor(max_workers=max_threads) as executor:
             futures = [
-                        executor.submit(self.process_single, dataset, file_name, token, nsrr_path, download_path)
+                        executor.submit(self.process_single, dataset, file_name, token, download_from, download_to, spo2_channel_name)
                         for file_name in file_names
                     ]
 

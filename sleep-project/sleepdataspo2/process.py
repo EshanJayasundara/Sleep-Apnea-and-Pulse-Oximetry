@@ -32,6 +32,14 @@ def main():
     )
 
     parser.add_argument(
+        "-spo2", "--spo2_channel_name",     # short and long option
+        type=str,
+        required=False,
+        default="SaO2",
+        help="spo2_channel_name in the edf file (column name of the spo2 signal)"
+    )
+
+    parser.add_argument(
         "-df", "--download_from",             # argument flag
         type=str,             # type of argument
         required=True,      # required
@@ -93,7 +101,7 @@ def main():
     elif args.start == None and args.end == None and args.list == None:
         raise ValueError("one of '--start and --end' or --list should be provided")
     
-    runner = RunSHHS(DownloaderNSRR())
+    runner = Run(DownloaderNSRR())
 
     if args.list:
         range_list = args.list.split(" ")
@@ -110,8 +118,9 @@ def main():
         dataset=args.dataset, 
         file_names=files_to_download, 
         token=os.environ["NSRR_TOKEN"], 
-        nsrr_path=args.download_from,
-        download_path=f"{args.download_to}/{args.dataset}/{args.download_from}", 
+        download_from=args.download_from,
+        download_to=args.download_to,
+        spo2_channel_name=args.spo2_channel_name,
         max_threads=args.max_threads
         )
 

@@ -20,17 +20,17 @@ from sleepdataspo2 import BASE_URL, MAX_RETRIES
 
 class DownloaderInterface(ABC):
     @abstractmethod
-    def download(self, dataset: str, file_name: str, token: str, nsrr_path:str, download_path: str) -> None:
+    def download(self, dataset: str, file_name: str, token: str, download_from: str, download_to: str) -> None:
         pass
 
 class DownloaderNSRR(DownloaderInterface):
     def __init__(self):
         pass
 
-    def download(self, dataset: str, file_name: str, token: str, nsrr_path:str, download_path: str) -> None:
-        file_path = f"{nsrr_path}/{file_name}.edf"
+    def download(self, dataset: str, file_name: str, token: str, download_from:str, download_to: str) -> None:
+        file_path = f"{download_from}/{file_name}.edf"
         download_url = f"{BASE_URL}/datasets/{dataset}/files/a/{token}/m/nsrr-gem-v1-0-0/{file_path}"
-        download_loc = f"{download_path}/{file_name}.edf"
+        download_loc = f"{download_to}/{dataset}/{file_path}"
         error = None
         partial = True
         params = {"auth_token": token}
