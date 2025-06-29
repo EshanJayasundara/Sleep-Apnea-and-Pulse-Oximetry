@@ -32,7 +32,7 @@ class RunInterface(ABC):
     def preprocess(self, dataset, download_from, download_to, file_name, spo2_channel_name) -> None:
         pass
     @abstractmethod
-    def calculate_odi(self, dataset, download_from, download_to, file_name, spo2_channel_name) -> Tuple[float, str]:
+    def calculate_features(self, dataset, download_from, download_to, file_name, spo2_channel_name) -> Tuple[float, str]:
         pass
     @abstractmethod
     def process_single(self, dataset:str, file_name: str, token: str, download_from:str, download_to: str, spo2_channel_name: str) -> None:
@@ -61,7 +61,7 @@ class Run(RunInterface):
             df.to_csv(path_or_buf=f"{path}/{file_name}.csv")
             print(f"✔ Created: {path}/{file_name}.csv")
         except Exception as e:
-            print(e)
+            print(f"{self.__class__}/preapre_csv", e)
 
     def preapre_parquet(self, dataset, download_from, download_to, file_name, spo2_channel_name) -> None:
         path = f"{download_to}/{dataset}/{download_from}"
@@ -72,7 +72,7 @@ class Run(RunInterface):
             df.to_parquet(path=f"{path}/{file_name}.parquet")
             print(f"✔ Created: {path}/{file_name}.parquet")
         except Exception as e:
-            print(e)
+            print(f"{self.__class__}/preapre_parquet", e)
 
     def delete_edf(self, dataset, download_from, download_to, file_name) -> None:
         path = f"{download_to}/{dataset}/{download_from}"
@@ -83,32 +83,33 @@ class Run(RunInterface):
             else:
                 print(f"✘ Path does not exists: {path}/{file_name}.edf")
         except Exception as e:
-            print(e)
+            print(f"{self.__class__}/delete_edf", e)
 
     def preprocess(self, dataset, download_from, download_to, file_name, spo2_channel_name) -> None:
         path = f"{download_to}/{dataset}/{download_from}"
-        odi, _ = self.calculate_odi(dataset, download_from, download_to, f"{file_name}.edf", spo2_channel_name)
-        odi_path = os.path.join(path, "ODI.csv")
+        features, _ = self.calculate_features(dataset, download_from, download_to, f"{file_name}.edf", spo2_channel_name)
+        
+        csv_path = os.path.join(path, f"extracted_{len(features)}_features.csv")
 
         # Extract just the numeric part of the file_name (e.g., "200001" from "shhs1-200001")
         patient_id = file_name.split("-")[-1]
 
         # Load or create the ODI.csv
-        if os.path.exists(odi_path):
-            df = pd.read_csv(odi_path, index_col=0)
+        if os.path.exists(csv_path):
+            df = pd.read_csv(csv_path, index_col=0)
         else:
-            df = pd.DataFrame(columns=["OxygenDesaturationIndex"])
+            df = pd.DataFrame(columns=features.keys())
             
         # Add or update the ODI value
-        df.loc[patient_id] = odi
+        df.loc[patient_id] = features
         # Save it
-        df.to_csv(odi_path)
+        df.to_csv(csv_path)
         print(f"✔ ODI updated for {file_name}")
 
-    def calculate_odi(self, dataset, download_from, download_to, file_name,  spo2_channel_name) -> Tuple[float, str]:
+    def calculate_features(self, dataset, download_from, download_to, file_name,  spo2_channel_name) -> Tuple[float, str]:
         path = f"{download_to}/{dataset}/{download_from}"
+
         reader = DataLoader(PandasDataLoader())
-        # scaler = MinMaxScaler((0, 100))
         cleaner = CleanFeatures(CleanSpO2())
         engineer = EngineerFeatures(EngineerOdi())
         plotter = PlotGraphs(PlotGraphsNSRR())
@@ -120,25 +121,29 @@ class Run(RunInterface):
             df = reader.read_csv(file_path=file_path)
         elif file_name.endswith(".parquet"):
             df = reader.read_parquet(file_path=file_path)
-        # resample to 1Hz
-        df = df[[True if x - int(x) == 0 else False for x in df.time]]
-        # make time column as the index
-        df = df.set_index("time")
-        # apply the scaler
-        # scaled_df = pd.DataFrame(scaler.fit_transform(df), columns=df.columns, index=df.index)
-        spo2 = cleaner.clean_single(df[spo2_channel_name])
+
+        intervals = df['time'].diff().dropna()
+        if not np.allclose(intervals, intervals.iloc[0]):
+            raise ValueError("Warning: Irregular sampling intervals detected!")
+        if 1 / intervals.iloc[0] != int(1 / intervals.iloc[0]):
+            raise ValueError(f"original_frequency = {1 / intervals.iloc[0]} is impossible. It should be an integer.")
+        original_frequency = int(1 / intervals.iloc[0])
+
+        spo2 = cleaner.clean_single(df[spo2_channel_name], original_frequency)
+
         pd.DataFrame({
                 "time": [i for i in range(len(spo2))],
                 "SaO2": spo2.tolist()
-            }).set_index("time").to_parquet(path=f"{path}/{file_name.split(".")[0]}_cleaned.parquet")
-        odi = engineer.compute_single(spo2=spo2)
+            }).set_index("time").to_parquet(path=f"{path}/{file_name.split('.')[0]}_cleaned.parquet")
+        
+        features = engineer.compute_single(spo2=spo2)
 
         name = file_name.split(".")[0]
 
         plotter.plot_one_signal(signal=df[spo2_channel_name], title=f"{name} Original Signal", save_path=f"{download_to}/{dataset}/images/original", name=name)
         plotter.plot_one_signal(signal=spo2, title=f"{name} Cleaned Signal", save_path=f"{download_to}/{dataset}/images/cleaned", name=name)
 
-        return odi, name
+        return features, name
     
     def process_single(self, dataset:str, file_name: str, token: str, download_from:str, download_to: str, spo2_channel_name:str) -> None:
             download_path = f"{download_to}/{dataset}/{download_from}"
@@ -170,4 +175,4 @@ class Run(RunInterface):
                     future.result()  # To raise exceptions if any
                 except Exception as e:
                     print(f"Error downloading: {e}")
-                    
+                    traceback.print_exc()

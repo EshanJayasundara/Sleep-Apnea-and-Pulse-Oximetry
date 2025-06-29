@@ -64,7 +64,7 @@ class DownloaderNSRR(DownloaderInterface):
         except (ChunkedEncodingError, ConnectionError, Timeout) as e:
             error = f"(Retryable Error: {type(e).__name__}) {e}"
         except Exception as e:
-            print(e)
+            print(f"{self.__class__}/download", e)
             error = f"({type(e).__name__}) {e}"
 
         # partial downloads not aloowed

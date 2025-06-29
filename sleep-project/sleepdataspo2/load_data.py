@@ -30,7 +30,7 @@ class PandasDataLoader(DataLoaderInterface):
             df = pd.read_csv(filepath_or_buffer=file_path)
         except Exception as e:
             print("Error reading CSV file:")
-            print(e)
+            print(f"{self.__class__}/read_csv", e)
         return df
     
     def read_edf(self, file_path: str) -> pd.DataFrame:
@@ -48,7 +48,7 @@ class PandasDataLoader(DataLoaderInterface):
             df['time'] = times
         except Exception as e:
             print("Error reading EDF file:")
-            print(e)
+            print(f"{self.__class__}/read_edf", e)
         return df
     
     def read_parquet(self, file_path:str) -> pd.DataFrame:
@@ -58,7 +58,7 @@ class PandasDataLoader(DataLoaderInterface):
             df = pd.read_parquet(filepath_or_buffer=file_path)
         except Exception as e:
             print("Error reading PARQUET file:")
-            print(e)
+            print(f"{self.__class__}/read_parquet", e)
         return df
 
 class DataLoader(DataLoaderInterface):

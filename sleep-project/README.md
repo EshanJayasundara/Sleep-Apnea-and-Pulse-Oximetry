@@ -1,6 +1,6 @@
 ## Usage
 
-#### How to use:
+#### How to use: (Req `python 3.8`)
 
 1. `git clone <repo>`
 2. `cd sleep-project`

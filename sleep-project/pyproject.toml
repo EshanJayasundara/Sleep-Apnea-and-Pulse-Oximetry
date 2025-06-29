@@ -1,24 +1,27 @@
 [project]
 name = "sleepdataspo2"
 version = "0.1.0"
-description = "Download .edf files from the sleepdata.org and convert them  into .csv containing time and SaO2 signal. Then use that data to calculate OxygenDesaturationIndex."
+description = "Create meaningful features from spo2 signals from sleepdata.org"
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.6,<3.9"  # Use <3.8 since your packages are older
 
 authors = [
     {name = "Eshan Jayasundara", email = "eshan@ieee.org"}
 ]
 
 dependencies = [
-    "mne==1.9.0",  # Add your runtime dependencies here
-    "pandas==2.2.2",
-    "numpy==1.26.4",
-    "pobm>1",
-    "matplotlib==3.8.4",
-    "seaborn==0.13.2",
+    "pyarrow==17.0.0",
+    "dotenv",
+    "numpy==1.21.2",
+    "pandas==1.1.5",                # Last Pandas supporting Python 3.8 well
+    "scikit-learn==0.22.2",
+    "scipy==1.4.1",
+    "lempel-ziv-complexity==0.2.2",
+    "pobm>1",                       # Assuming compatible version available
+    "matplotlib==3.5.3",            # Matches numpy 1.18 and Python 3.8 compatibility
+    "seaborn==0.10.1",              # Compatible with matplotlib 3.1.x and pandas 1.1.x
+    "mne==1.3.0"                    # Older MNE compatible with Python 3.8
 ]
-
-
 
 [build-system]
 requires = ["setuptools", "wheel"]
