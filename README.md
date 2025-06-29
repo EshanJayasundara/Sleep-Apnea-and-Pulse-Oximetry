@@ -44,7 +44,17 @@ We further propose a novel deep learning framework based on learned embeddings t
 5. `pip install dist/sleepdataspo2-0.1.0-py3-none-any.whl`
 6. `cd ../usage`
 7. place `.env` (which contains `NSRR_TOKEN`) and `cert.pem` (which used to verify the identity of the server. Since we only download files we don't need a private key) files into `usage` folder.
-8. `python -m sleepdataspo2.shhs -d shhs -p shhs1 -df "polysomnography/edfs/shhs1" -dt data -s 200504 -e 200505 -t 2` or `python -m sleepdataspo2.shhs -d shhs -p shhs1 -df "polysomnography/edfs/shhs1" -dt data -l "200315 200317 200313" -t 3`
+8. Use one of the following:
+
+   ```bash
+     python -m sleepdataspo2.shhs -d shhs -p shhs1 -df "polysomnography/edfs/shhs1" -dt data -s 200504 -e 200505 -t 2
+   ```
+
+   or
+
+   ```bash
+   python -m sleepdataspo2.shhs -d shhs -p shhs1 -df "polysomnography/edfs/shhs1" -dt data -l "200315 200317 200313" -t 3
+   ```
 
 #### Here’s why only public `cert.pem` is enough:
 
