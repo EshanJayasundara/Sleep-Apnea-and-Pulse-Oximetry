@@ -44,7 +44,7 @@ We further propose a novel deep learning framework based on learned embeddings t
    - install ruby and don't follow the instructions in the above page under section `usage`
    - after `gem install nsrr`, you may find `Ruby31\ssl\cert.pem` (in my case `C:\Ruby31\ssl\cert.pem`)
 
-#### How to use: (Req `python 3.8`)
+#### How to use:
 
 1. `git clone <repo>`
 2. `cd sleep-project`
