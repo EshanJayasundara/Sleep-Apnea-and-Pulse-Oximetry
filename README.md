@@ -42,8 +42,7 @@ We further propose a novel deep learning framework based on learned embeddings t
 3. `cert.pem` which used to verify the identity of the server. Acquired from following steps:
    - Head to `https://github.com/nsrr/nsrr-gem/blob/master/README.md#prerequisites`
    - install ruby and don't follow the instructions in the above page under section `usage`
-   - after `gem install nsrr`, you may find `Ruby31\lib\ruby\gems\3.1.0\gems\nsrr-8.0.0` (in my case `C:\Ruby31\lib\ruby\gems\3.1.0\gems\nsrr-8.0.0`)
-   - within this folder or one of the sub folders I found `cert.pem`
+   - after `gem install nsrr`, you may find `Ruby31\ssl\cert.pem` (in my case `C:\Ruby31\ssl\cert.pem`)
 
 #### How to use: (Req `python 3.8`)
 
