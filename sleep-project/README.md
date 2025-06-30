@@ -72,14 +72,14 @@ If you need to use the package directly see the section <a href="#requirements">
 
     ```bash
 
-    python -m sleepdataspo2.process -d shhs -p shhs1 -spo2 SaO2 -df "polysomnography/edfs/shhs1" -dt data -s 200001 -e 200005 -t 2 -c False
+    python -m sleepdataspo2.process -d shhs -p shhs1 -spo2 SaO2 -df "polysomnography/edfs/shhs1" -dt data -s 200001 -e 200005 -t 2
 
     ```
 
     or
 
     ```bash
-    python -m sleepdataspo2.process -d shhs -p shhs1 -spo2 SaO2 -df "polysomnography/edfs/shhs1" -dt data -l "200001 200003 200007" -t 3 -c False
+    python -m sleepdataspo2.process -d shhs -p shhs1 -spo2 SaO2 -df "polysomnography/edfs/shhs1" -dt data -l "200001 200003 200007" -t 3
     ```
 
 #### Here’s why only server public key `cert.pem` is enough:
