@@ -39,16 +39,32 @@ class EngineerOdi(EngineerFeaturesInterface):
         light_green = Fore.LIGHTGREEN_EX
         reset = Style.RESET_ALL
         
-        desat_class = DesaturationsMeasures(ODI_Threshold=3, threshold_method=DesatMethodEnum.Relative)
+        desat_class_3_relative = DesaturationsMeasures(ODI_Threshold=3, threshold_method=DesatMethodEnum.Relative)
+        desat_class_5_relative = DesaturationsMeasures(ODI_Threshold=5, threshold_method=DesatMethodEnum.Relative)
+        desat_class_83_hard = DesaturationsMeasures(hard_threshold=83, threshold_method=DesatMethodEnum.Hard)
+        desat_class_85_hard = DesaturationsMeasures(hard_threshold=85, threshold_method=DesatMethodEnum.Hard)
+        desat_class_90_hard = DesaturationsMeasures(hard_threshold=90, threshold_method=DesatMethodEnum.Hard)
         # Compute the biomarkers with known desaturation locations
         print(f"{light_green}[DEBUG]{reset} Computing desaturation features")
-        results_desat = desat_class.compute(spo2)
+        results_desat_3_relative = desat_class_3_relative.compute(spo2)
+        results_desat_5_relative = desat_class_5_relative.compute(spo2)
+        results_desat_83_hard = desat_class_83_hard.compute(spo2)
+        results_desat_85_hard = desat_class_85_hard.compute(spo2)
+        results_desat_90_hard = desat_class_90_hard.compute(spo2)
         print(f"{light_green}[DEBUG]{reset} Completed computing desaturation features")
 
-        hypoxic_class = HypoxicBurdenMeasures(results_desat.begin, results_desat.end, CT_Threshold=90, CA_Baseline=90)
+        hypoxic_class_3_relative = HypoxicBurdenMeasures(results_desat_3_relative.begin, results_desat_3_relative.end, CT_Threshold=90, CA_Baseline=90)
+        hypoxic_class_5_relative = HypoxicBurdenMeasures(results_desat_5_relative.begin, results_desat_5_relative.end, CT_Threshold=90, CA_Baseline=90)
+        hypoxic_class_83_hard = HypoxicBurdenMeasures(results_desat_83_hard.begin, results_desat_83_hard.end, CT_Threshold=90, CA_Baseline=90)
+        hypoxic_class_85_hard = HypoxicBurdenMeasures(results_desat_85_hard.begin, results_desat_85_hard.end, CT_Threshold=90, CA_Baseline=90)
+        hypoxic_class_90_hard = HypoxicBurdenMeasures(results_desat_90_hard.begin, results_desat_90_hard.end, CT_Threshold=90, CA_Baseline=90)
         # Compute the biomarkers
         print(f"{light_green}[DEBUG]{reset} Computing burden features")
-        results_hypoxic = hypoxic_class.compute(spo2)
+        results_hypoxic_3_relative = hypoxic_class_3_relative.compute(spo2)
+        results_hypoxic_2_relative = hypoxic_class_5_relative.compute(spo2)
+        results_hypoxic_83_hard = hypoxic_class_83_hard.compute(spo2)
+        results_hypoxic_85_hard = hypoxic_class_85_hard.compute(spo2)
+        results_hypoxic_90_hard = hypoxic_class_90_hard.compute(spo2)
         print(f"{light_green}[DEBUG]{reset} Completed computing burden features")
 
         if complex_features:
@@ -76,31 +92,120 @@ class EngineerOdi(EngineerFeaturesInterface):
         results_PSD = psd_class.compute(spo2)
         print(f"{light_green}[DEBUG]{reset} Completed computing psd periodicity features")
 
-
         features = {
-            # Desaturation event features
-            "ODI": results_desat.ODI,                 # Oxygen Desaturation Index: Number of desaturations per hour
-            "DL_u": results_desat.DL_u,               # Mean desaturation duration
-            "DL_sd": results_desat.DL_sd,             # Std deviation of desaturation duration
-            "DA100_u": results_desat.DA100_u,         # Mean area under desaturation curve (baseline = 100%)
-            "DA100_sd": results_desat.DA100_sd,       # Std deviation of DA100
-            "DAmax_u": results_desat.DAmax_u,         # Mean desaturation area (baseline = max value)
-            "DAmax_sd": results_desat.DAmax_sd,       # Std deviation of DAmax
-            "DD100_u": results_desat.DD100_u,         # Mean desaturation depth from 100%
-            "DD100_sd": results_desat.DD100_sd,       # Std deviation of DD100
-            "DDmax_u": results_desat.DDmax_u,         # Mean desaturation depth from max value
-            "DDmax_sd": results_desat.DDmax_sd,       # Std deviation of DDmax
-            "DS_u": results_desat.DS_u,               # Mean slope of desaturation events
-            "DS_sd": results_desat.DS_sd,             # Std deviation of desaturation slopes
-            "TD_u": results_desat.TD_u,               # Mean time between desaturation events
-            "TD_sd": results_desat.TD_sd,             # Std deviation of time between desaturations
+            # ---- Relative thresholds ----
+            # 3%
+            "ODI_thr3": results_desat_3_relative.ODI,
+            "DL_u_thr3": results_desat_3_relative.DL_u,
+            "DL_sd_thr3": results_desat_3_relative.DL_sd,
+            "DA100_u_thr3": results_desat_3_relative.DA100_u,
+            "DA100_sd_thr3": results_desat_3_relative.DA100_sd,
+            "DAmax_u_thr3": results_desat_3_relative.DAmax_u,
+            "DAmax_sd_thr3": results_desat_3_relative.DAmax_sd,
+            "DD100_u_thr3": results_desat_3_relative.DD100_u,
+            "DD100_sd_thr3": results_desat_3_relative.DD100_sd,
+            "DDmax_u_thr3": results_desat_3_relative.DDmax_u,
+            "DDmax_sd_thr3": results_desat_3_relative.DDmax_sd,
+            "DS_u_thr3": results_desat_3_relative.DS_u,
+            "DS_sd_thr3": results_desat_3_relative.DS_sd,
+            "TD_u_thr3": results_desat_3_relative.TD_u,
+            "TD_sd_thr3": results_desat_3_relative.TD_sd,
 
-            # Cumulative oxygen metrics
-            "CA": results_hypoxic.CA,                   # Integral of SpO2 below a threshold, normalized by total time
-            "CT": results_hypoxic.CT,                   # % of time spent below threshold SpO2
-            "POD": results_hypoxic.POD,                 # % of desaturation events over total time
-            "AODmax": results_hypoxic.AODmax,           # Area under desaturation curve using max SpO2 as baseline, normalized
-            "AOD100": results_hypoxic.AOD100,           # Cumulative area below 100% SpO2 baseline, normalized
+            "CA_thr3": results_hypoxic_3_relative.CA,
+            "CT_thr3": results_hypoxic_3_relative.CT,
+            "POD_thr3": results_hypoxic_3_relative.POD,
+            "AODmax_thr3": results_hypoxic_3_relative.AODmax,
+            "AOD100_thr3": results_hypoxic_3_relative.AOD100,
+
+            # 5%
+            "ODI_thr5": results_desat_5_relative.ODI,
+            "DL_u_thr5": results_desat_5_relative.DL_u,
+            "DL_sd_thr5": results_desat_5_relative.DL_sd,
+            "DA100_u_thr5": results_desat_5_relative.DA100_u,
+            "DA100_sd_thr5": results_desat_5_relative.DA100_sd,
+            "DAmax_u_thr5": results_desat_5_relative.DAmax_u,
+            "DAmax_sd_thr5": results_desat_5_relative.DAmax_sd,
+            "DD100_u_thr5": results_desat_5_relative.DD100_u,
+            "DD100_sd_thr5": results_desat_5_relative.DD100_sd,
+            "DDmax_u_thr5": results_desat_5_relative.DDmax_u,
+            "DDmax_sd_thr5": results_desat_5_relative.DDmax_sd,
+            "DS_u_thr5": results_desat_5_relative.DS_u,
+            "DS_sd_thr5": results_desat_5_relative.DS_sd,
+            "TD_u_thr5": results_desat_5_relative.TD_u,
+            "TD_sd_thr5": results_desat_5_relative.TD_sd,
+
+            "CA_thr5": results_hypoxic_2_relative.CA,
+            "CT_thr5": results_hypoxic_2_relative.CT,
+            "POD_thr5": results_hypoxic_2_relative.POD,
+            "AODmax_thr5": results_hypoxic_2_relative.AODmax,
+            "AOD100_thr5": results_hypoxic_2_relative.AOD100,
+
+            # ---- Hard thresholds ----
+            # 83%
+            "DL_u_thr83": results_desat_83_hard.DL_u,
+            "DL_sd_thr83": results_desat_83_hard.DL_sd,
+            "DA100_u_thr83": results_desat_83_hard.DA100_u,
+            "DA100_sd_thr83": results_desat_83_hard.DA100_sd,
+            "DAmax_u_thr83": results_desat_83_hard.DAmax_u,
+            "DAmax_sd_thr83": results_desat_83_hard.DAmax_sd,
+            "DD100_u_thr83": results_desat_83_hard.DD100_u,
+            "DD100_sd_thr83": results_desat_83_hard.DD100_sd,
+            "DDmax_u_thr83": results_desat_83_hard.DDmax_u,
+            "DDmax_sd_thr83": results_desat_83_hard.DDmax_sd,
+            "DS_u_thr83": results_desat_83_hard.DS_u,
+            "DS_sd_thr83": results_desat_83_hard.DS_sd,
+            "TD_u_thr83": results_desat_83_hard.TD_u,
+            "TD_sd_thr83": results_desat_83_hard.TD_sd,
+
+            "CA_thr83": results_hypoxic_83_hard.CA,
+            "CT_thr83": results_hypoxic_83_hard.CT,
+            "POD_thr83": results_hypoxic_83_hard.POD,
+            "AODmax_thr83": results_hypoxic_83_hard.AODmax,
+            "AOD100_thr83": results_hypoxic_83_hard.AOD100,
+
+            # 85%
+            "DL_u_thr85": results_desat_85_hard.DL_u,
+            "DL_sd_thr85": results_desat_85_hard.DL_sd,
+            "DA100_u_thr85": results_desat_85_hard.DA100_u,
+            "DA100_sd_thr85": results_desat_85_hard.DA100_sd,
+            "DAmax_u_thr85": results_desat_85_hard.DAmax_u,
+            "DAmax_sd_thr85": results_desat_85_hard.DAmax_sd,
+            "DD100_u_thr85": results_desat_85_hard.DD100_u,
+            "DD100_sd_thr85": results_desat_85_hard.DD100_sd,
+            "DDmax_u_thr85": results_desat_85_hard.DDmax_u,
+            "DDmax_sd_thr85": results_desat_85_hard.DDmax_sd,
+            "DS_u_thr85": results_desat_85_hard.DS_u,
+            "DS_sd_thr85": results_desat_85_hard.DS_sd,
+            "TD_u_thr85": results_desat_85_hard.TD_u,
+            "TD_sd_thr85": results_desat_85_hard.TD_sd,
+
+            "CA_thr85": results_hypoxic_85_hard.CA,
+            "CT_thr85": results_hypoxic_85_hard.CT,
+            "POD_thr85": results_hypoxic_85_hard.POD,
+            "AODmax_thr85": results_hypoxic_85_hard.AODmax,
+            "AOD100_thr85": results_hypoxic_85_hard.AOD100,
+
+            # 90%
+            "DL_u_thr90": results_desat_90_hard.DL_u,
+            "DL_sd_thr90": results_desat_90_hard.DL_sd,
+            "DA100_u_thr90": results_desat_90_hard.DA100_u,
+            "DA100_sd_thr90": results_desat_90_hard.DA100_sd,
+            "DAmax_u_thr90": results_desat_90_hard.DAmax_u,
+            "DAmax_sd_thr90": results_desat_90_hard.DAmax_sd,
+            "DD100_u_thr90": results_desat_90_hard.DD100_u,
+            "DD100_sd_thr90": results_desat_90_hard.DD100_sd,
+            "DDmax_u_thr90": results_desat_90_hard.DDmax_u,
+            "DDmax_sd_thr90": results_desat_90_hard.DDmax_sd,
+            "DS_u_thr90": results_desat_90_hard.DS_u,
+            "DS_sd_thr90": results_desat_90_hard.DS_sd,
+            "TD_u_thr90": results_desat_90_hard.TD_u,
+            "TD_sd_thr90": results_desat_90_hard.TD_sd,
+
+            "CA_thr90": results_hypoxic_90_hard.CA,
+            "CT_thr90": results_hypoxic_90_hard.CT,
+            "POD_thr90": results_hypoxic_90_hard.POD,
+            "AODmax_thr90": results_hypoxic_90_hard.AODmax,
+            "AOD100_thr90": results_hypoxic_90_hard.AOD100,
 
             # Statistical features of the SpO2 signal
             "AV": results_statistics.AV,                   # Mean (average) SpO2
@@ -112,9 +217,6 @@ class EngineerOdi(EngineerFeaturesInterface):
             "M": results_statistics.M,                     # % of time below median SpO2 - x%
             "ZC": results_statistics.ZC,                   # Number of zero-crossing points
             "DI": results_statistics.DI,                   # Delta Index
-            "K": results_statistics.K,                     # Kurtosis of SpO2 signal
-            "SK": results_statistics.SK,                   # Skewness of SpO2 signal
-            "MAD": results_statistics.MAD,                 # Mean absolute deviation
 
             # PRSA features (Phase Rectified Signal Averaging)
             "PRSAc": results_PRSA.PRSAc,             # PRSA capacity

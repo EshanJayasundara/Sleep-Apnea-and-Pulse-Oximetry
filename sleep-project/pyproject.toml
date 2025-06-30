@@ -20,8 +20,8 @@ dependencies = [
     "pobm==1.2.0",                  # Assuming compatible version available
     "matplotlib==3.5.3",            # Matches numpy 1.18 and Python 3.8 compatibility
     "seaborn==0.10.1",              # Compatible with matplotlib 3.1.x and pandas 1.1.x
-    "mne==1.3.0"                    # Older MNE compatible with Python 3.8
-    "filelock==3.16.1"
+    "mne==1.3.0",                    # Older MNE compatible with Python 3.8
+    "filelock==3.16.1",
 ]
 
 [build-system]

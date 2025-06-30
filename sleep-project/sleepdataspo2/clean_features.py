@@ -35,6 +35,12 @@ class CleanFeaturesInterface(ABC):
                 if (((signal_filtered[-1] - data) / signal_filtered[-1]) * 100) < Diff:
                     signal_filtered.append(data)
         return np.array(signal_filtered)
+    
+    def nan_interp(self, signal):
+        nans = np.isnan(signal)
+        not_nans = ~nans
+        signal[nans] = np.interp(np.flatnonzero(nans), np.flatnonzero(not_nans), signal[not_nans])
+        return signal
 
 class CleanSpO2(CleanFeaturesInterface):
     def __init__(self):
@@ -57,7 +63,7 @@ class CleanSpO2(CleanFeaturesInterface):
         print(f"{light_green}[DEBUG]{reset} length after removing non-physiological values: {spo2.shape[0]}")
         # 2. Apply Delta Filter (remove sharp jumps/artifacts)
         # print(f"{light_green}[DEBUG]{reset} SPO2 length: {len(spo2)}")
-        spo2 = super().dfilter(spo2, Diff=4)
+        spo2 = super().dfilter(spo2, Diff=8)
         print(f"{light_green}[DEBUG]{reset} length after applying delta filter: {spo2.shape[0]}")
         # 3. Smooth with median filter to avoid spikes
         # print(f"{light_green}[DEBUG]{reset} SPO2 length: {len(spo2)}")
@@ -69,6 +75,8 @@ class CleanSpO2(CleanFeaturesInterface):
         # 5. Downsample to 1 Hz
         spo2 = resamp_spo2(spo2, OriginalFreq=original_frequency)
         print(f"{light_green}[DEBUG]{reset} length after downsampling: {spo2.shape[0]}")
+        # 6. Interpolate to replace NAN
+        spo2 = super().nan_interp(spo2)
 
         spo2_series = pd.Series(spo2)
 
