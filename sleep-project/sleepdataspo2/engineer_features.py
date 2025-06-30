@@ -14,17 +14,18 @@ from pobm.obm.complex import ComplexityMeasures
 from pobm.obm.general import OverallGeneralMeasures
 from pobm.obm.periodicity import  PRSAMeasures, PSDMeasures
 from pobm._ResultsClasses import DesatMethodEnum
+from colorama import Fore, Style
 
 class EngineerFeaturesInterface(ABC):
     @abstractmethod
-    def compute_single(self, spo2: pd.Series, sampling_rate: int, drop_threshold: float, min_duration: int) -> float:
+    def compute_single(self, spo2: pd.Series, complex_features: bool) -> float:
         pass
 
 class EngineerOdi(EngineerFeaturesInterface):
     def __init__(self):
         pass
 
-    def compute_single(self, spo2: pd.Series, sampling_rate: int=1, drop_threshold: float=3.0, min_duration: int=10) -> float:
+    def compute_single(self, spo2: pd.Series, complex_features: bool=False) -> float:
         """
         Computes ODI3% from cleaned SpO2 signal.
         Args:
@@ -35,33 +36,48 @@ class EngineerOdi(EngineerFeaturesInterface):
         Returns:
             ODI value = number of desats per hour
         """
-
+        light_green = Fore.LIGHTGREEN_EX
+        reset = Style.RESET_ALL
+        
         desat_class = DesaturationsMeasures(ODI_Threshold=3, threshold_method=DesatMethodEnum.Relative)
         # Compute the biomarkers with known desaturation locations
+        print(f"{light_green}[DEBUG]{reset} Computing desaturation features")
         results_desat = desat_class.compute(spo2)
+        print(f"{light_green}[DEBUG]{reset} Completed computing desaturation features")
 
         hypoxic_class = HypoxicBurdenMeasures(results_desat.begin, results_desat.end, CT_Threshold=90, CA_Baseline=90)
         # Compute the biomarkers
+        print(f"{light_green}[DEBUG]{reset} Computing burden features")
         results_hypoxic = hypoxic_class.compute(spo2)
+        print(f"{light_green}[DEBUG]{reset} Completed computing burden features")
 
-        complexity_class = ComplexityMeasures(CTM_Threshold=0.25, DFA_Window=20, M_Sampen=3, R_Sampen=0.2, M_ApEn=2, R_ApEn=0.25)
-        # Compute the biomarkers
-        results_complexity = complexity_class.compute(spo2)
+        if complex_features:
+            complexity_class = ComplexityMeasures(CTM_Threshold=0.25, DFA_Window=20, M_Sampen=3, R_Sampen=0.2, M_ApEn=2, R_ApEn=0.25)
+            # Compute the biomarkers
+            print(f"{light_green}[DEBUG]{reset} Computing complexity features")
+            results_complexity = complexity_class.compute(spo2)
+            print(f"{light_green}[DEBUG]{reset} Completed computing complexity features")
 
         statistics_class = OverallGeneralMeasures(ZC_Baseline=90, percentile=1, M_Threshold=2, DI_Window=12)
         # Compute the biomarkers
+        print(f"{light_green}[DEBUG]{reset} Computing statistical features")
         results_statistics = statistics_class.compute(spo2)
+        print(f"{light_green}[DEBUG]{reset} Completed computing statistical features")
 
         prsa_class = PRSAMeasures(PRSA_Window=10, K_AC=2)
         # Compute the biomarkers
+        print(f"{light_green}[DEBUG]{reset} Computing prsa periodicity features")
         results_PRSA = prsa_class.compute(spo2)
+        print(f"{light_green}[DEBUG]{reset} Completed computing prsa periodicity features")
 
         psd_class = PSDMeasures()
         # Compute the biomarkers
+        print(f"{light_green}[DEBUG]{reset} Computing psd periodicity features")
         results_PSD = psd_class.compute(spo2)
+        print(f"{light_green}[DEBUG]{reset} Completed computing psd periodicity features")
 
 
-        return {
+        features = {
             # Desaturation event features
             "ODI": results_desat.ODI,                 # Oxygen Desaturation Index: Number of desaturations per hour
             "DL_u": results_desat.DL_u,               # Mean desaturation duration
@@ -85,13 +101,6 @@ class EngineerOdi(EngineerFeaturesInterface):
             "POD": results_hypoxic.POD,                 # % of desaturation events over total time
             "AODmax": results_hypoxic.AODmax,           # Area under desaturation curve using max SpO2 as baseline, normalized
             "AOD100": results_hypoxic.AOD100,           # Cumulative area below 100% SpO2 baseline, normalized
-
-            # Nonlinear complexity measures
-            "ApEn": results_complexity.ApEn,               # Approximate entropy
-            "LZ": results_complexity.LZ,                   # Lempel-Ziv complexity
-            "CTM": results_complexity.CTM,                 # Central tendency measure
-            "SampEn": results_complexity.SampEn,           # Sample entropy
-            "DFA": results_complexity.DFA,                 # Detrended fluctuation analysis
 
             # Statistical features of the SpO2 signal
             "AV": results_statistics.AV,                   # Mean (average) SpO2
@@ -123,15 +132,22 @@ class EngineerOdi(EngineerFeaturesInterface):
             "PSD_ratio": results_PSD.PSD_ratio,     # Ratio PSD_band / PSD_total
             "PSD_peak": results_PSD.PSD_peak,       # Peak value in desired frequency band
         }
+
+        if complex_features:
+            features["ApEn"] = results_complexity.ApEn      # Approximate entropy
+            features["LZ"] = results_complexity.LZ          # Lempel-Ziv complexity
+            features["CTM"] = results_complexity.CTM        # Central tendency measure
+            features["SampEn"] = results_complexity.SampEn  # Sample entropy
+            features["DFA"] = results_complexity.DFA        # Detrended fluctuation analysis   
+
+        return features   
         
 class EngineerFeatures(EngineerFeaturesInterface):
     def __init__(self, feature_engineer: EngineerFeaturesInterface):
         self._feature_engineer = feature_engineer
 
-    def compute_single(self, spo2: pd.Series, sampling_rate: int=1, drop_threshold: float=3.0, min_duration: int=10) -> float:
+    def compute_single(self, spo2: pd.Series, complex_features: bool) -> float:
         return self._feature_engineer.compute_single(
                     spo2=spo2,
-                    sampling_rate=sampling_rate,
-                    drop_threshold=drop_threshold,
-                    min_duration=min_duration
+                    complex_features=complex_features,
                 )

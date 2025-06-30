@@ -11,6 +11,7 @@ import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
 import pickle
 import os
+from filelock import FileLock, Timeout
 
 from sleepdataspo2.load_data import *
 from sleepdataspo2.engineer_features import *
@@ -29,19 +30,19 @@ class RunInterface(ABC):
     def delete_edf(self, dataset, download_from, download_to, file_name) -> None:
         pass
     @abstractmethod
-    def preprocess(self, dataset, download_from, download_to, file_name, spo2_channel_name) -> None:
+    def preprocess(self, dataset, download_from, download_to, file_name, spo2_channel_name, complex_features) -> None:
         pass
     @abstractmethod
-    def calculate_features(self, dataset, download_from, download_to, file_name, spo2_channel_name) -> Tuple[float, str]:
+    def calculate_features(self, dataset, download_from, download_to, file_name, spo2_channel_name, complex_features) -> Tuple[float, str]:
         pass
     @abstractmethod
-    def process_single(self, dataset:str, file_name: str, token: str, download_from:str, download_to: str, spo2_channel_name: str) -> None:
+    def process_single(self, dataset:str, file_name: str, token: str, download_from:str, download_to: str, spo2_channel_name: str, complex_features: bool) -> None:
         pass
     @abstractmethod
-    def run_sequential(self, dataset: str, file_names: List[str], token: str, download_from: str, download_to: str, spo2_channel_name: str) -> pd.Series:
+    def run_sequential(self, dataset: str, file_names: List[str], token: str, download_from: str, download_to: str, spo2_channel_name: str,  complex_features: bool) -> pd.Series:
         pass
     @abstractmethod
-    def run_parallel(self, dataset: str, file_names: List[str], token: str, download_from: str, download_to: str, spo2_channel_name: str, max_threads: int) -> pd.Series:
+    def run_parallel(self, dataset: str, file_names: List[str], token: str, download_from: str, download_to: str, spo2_channel_name: str, max_threads: int, complex_features: bool) -> pd.Series:
         pass
     # def write_pickle(self, objs_path: str, obj: object, name: str) -> None:
     #     os.makedirs(objs_path, exist_ok=True)
@@ -59,7 +60,7 @@ class Run(RunInterface):
             df = reader.read_edf(file_path=f"{path}/{file_name}.edf")
             df = df[['time', spo2_channel_name]]
             df.to_csv(path_or_buf=f"{path}/{file_name}.csv")
-            print(f"✔ Created: {path}/{file_name}.csv")
+            print(f"[✔] Created: {path}/{file_name}.csv")
         except Exception as e:
             print(f"{self.__class__}/preapre_csv", e)
 
@@ -70,7 +71,7 @@ class Run(RunInterface):
             df = reader.read_edf(file_path=f"{path}/{file_name}.edf")
             df = df[['time', spo2_channel_name]]
             df.to_parquet(path=f"{path}/{file_name}.parquet")
-            print(f"✔ Created: {path}/{file_name}.parquet")
+            print(f"[✔] Created: {path}/{file_name}.parquet")
         except Exception as e:
             print(f"{self.__class__}/preapre_parquet", e)
 
@@ -79,34 +80,46 @@ class Run(RunInterface):
         try:
             if os.path.exists(f"{path}/{file_name}.edf"):
                 os.remove(f"{path}/{file_name}.edf")
-                print(f"✔ Removed: {path}/{file_name}.edf")
+                print(f"[✔] Removed: {path}/{file_name}.edf")
             else:
-                print(f"✘ Path does not exists: {path}/{file_name}.edf")
+                print(f"[✘] Path does not exists: {path}/{file_name}.edf")
         except Exception as e:
             print(f"{self.__class__}/delete_edf", e)
 
-    def preprocess(self, dataset, download_from, download_to, file_name, spo2_channel_name) -> None:
+    def preprocess(self, dataset, download_from, download_to, file_name, spo2_channel_name, complex_features) -> None:
         path = f"{download_to}/{dataset}/{download_from}"
-        features, _ = self.calculate_features(dataset, download_from, download_to, f"{file_name}.edf", spo2_channel_name)
+        features, _ = self.calculate_features(dataset, download_from, download_to, f"{file_name}.edf", spo2_channel_name, complex_features)
         
         csv_path = os.path.join(path, f"extracted_{len(features)}_features.csv")
+        lock_path = csv_path + ".lock"
 
         # Extract just the numeric part of the file_name (e.g., "200001" from "shhs1-200001")
         patient_id = file_name.split("-")[-1]
 
-        # Load or create the ODI.csv
-        if os.path.exists(csv_path):
-            df = pd.read_csv(csv_path, index_col=0)
-        else:
-            df = pd.DataFrame(columns=features.keys())
-            
-        # Add or update the ODI value
-        df.loc[patient_id] = features
-        # Save it
-        df.to_csv(csv_path)
-        print(f"✔ ODI updated for {file_name}")
+        # Use a file lock to avoid concurrent write issues
+        lock = FileLock(lock_path, timeout=180)  # waits up to 180 seconds
 
-    def calculate_features(self, dataset, download_from, download_to, file_name,  spo2_channel_name) -> Tuple[float, str]:
+        try:
+            # 1. Lock is acquired at the start of the with block
+            # 2. If an exception occurs inside the block:
+            #       The with statement guarantees that __exit__() is called.
+            #       This automatically releases the lock, even if the block was exited due to an error.
+            with lock:
+                if os.path.exists(csv_path):
+                    df = pd.read_csv(csv_path, index_col=0)
+                else:
+                    df = pd.DataFrame(columns=features.keys())
+
+                df.loc[patient_id] = features
+                df.to_csv(csv_path)
+                print(f"[✔] Updated: {csv_path}")
+
+        except Timeout:
+            print(f"[✘] Timeout while waiting for the lock: {lock_path}")
+        except Exception as e:
+            print(f"[✘] Error during preprocessing for {file_name}: {e}")
+
+    def calculate_features(self, dataset, download_from, download_to, file_name,  spo2_channel_name, complex_features: bool) -> Tuple[float, str]:
         path = f"{download_to}/{dataset}/{download_from}"
 
         reader = DataLoader(PandasDataLoader())
@@ -136,7 +149,7 @@ class Run(RunInterface):
                 "SaO2": spo2.tolist()
             }).set_index("time").to_parquet(path=f"{path}/{file_name.split('.')[0]}_cleaned.parquet")
         
-        features = engineer.compute_single(spo2=spo2)
+        features = engineer.compute_single(spo2=spo2, complex_features=complex_features)
 
         name = file_name.split(".")[0]
 
@@ -145,28 +158,28 @@ class Run(RunInterface):
 
         return features, name
     
-    def process_single(self, dataset:str, file_name: str, token: str, download_from:str, download_to: str, spo2_channel_name:str) -> None:
+    def process_single(self, dataset:str, file_name: str, token: str, download_from:str, download_to: str, spo2_channel_name:str, complex_features: bool) -> None:
             download_path = f"{download_to}/{dataset}/{download_from}"
             os.makedirs(download_path, exist_ok=True)
             # check if the file already downloaded
             file_loc = f"{download_path}/{file_name}.edf"
             if os.path.exists(file_loc):
-                print(f"✔ Download terminated, file already exists: {file_loc}.edf")
-                self.preprocess(dataset=dataset, download_from=download_from, download_to=download_to, file_name=file_name, spo2_channel_name=spo2_channel_name)
+                print(f"[✔] Download terminated, file already exists: {file_loc}")
+                self.preprocess(dataset=dataset, download_from=download_from, download_to=download_to, file_name=file_name, spo2_channel_name=spo2_channel_name, complex_features=complex_features)
                 self.delete_edf(dataset=dataset, download_from=download_from, download_to=download_to, file_name=file_name)
                 return
             self._downloader.download(dataset=dataset, file_name=file_name, token=token, download_from=download_from, download_to=download_to)
-            self.preprocess(dataset=dataset, download_from=download_from, download_to=download_to, file_name=file_name, spo2_channel_name=spo2_channel_name)
+            self.preprocess(dataset=dataset, download_from=download_from, download_to=download_to, file_name=file_name, spo2_channel_name=spo2_channel_name, complex_features=complex_features)
             self.delete_edf(dataset=dataset, download_from=download_from, download_to=download_to, file_name=file_name)
 
-    def run_sequential(self, dataset: str, file_names: List[str], token: str, download_from: str, download_to: str, spo2_channel_name: str) -> None:
+    def run_sequential(self, dataset: str, file_names: List[str], token: str, download_from: str, download_to: str, spo2_channel_name: str, complex_features: bool) -> None:
         for file_name in file_names:
-            self.process_single(dataset, file_name, token, download_from, download_to, spo2_channel_name)
+            self.process_single(dataset, file_name, token, download_from, download_to, spo2_channel_name, complex_features)
 
-    def run_parallel(self, dataset: str, file_names: List[str], token: str, download_from: str, download_to: str, spo2_channel_name: str, max_threads: int) -> None:
+    def run_parallel(self, dataset: str, file_names: List[str], token: str, download_from: str, download_to: str, spo2_channel_name: str, max_threads: int, complex_features: bool) -> None:
         with ThreadPoolExecutor(max_workers=max_threads) as executor:
             futures = [
-                        executor.submit(self.process_single, dataset, file_name, token, download_from, download_to, spo2_channel_name)
+                        executor.submit(self.process_single, dataset, file_name, token, download_from, download_to, spo2_channel_name, complex_features)
                         for file_name in file_names
                     ]
 

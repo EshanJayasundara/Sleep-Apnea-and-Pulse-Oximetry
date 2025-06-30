@@ -1,6 +1,16 @@
 ## Usage
 
-#### How to use: (Req `python 3.8`)
+#### Requirements
+
+1. `miniconda` or any other virtual environment with `python 3.8` installed
+2. `.env` which contains `NSRR_TOKEN` acqurerd from `sleepdata.org` upon request
+3. `cert.pem` which used to verify the identity of the server. Acquired from following steps:
+   - Head to `https://github.com/nsrr/nsrr-gem/blob/master/README.md#prerequisites`
+   - install ruby and don't follow the instructions in the above page under section `usage`
+   - after `gem install nsrr`, you may find `Ruby31\lib\ruby\gems\3.1.0\gems\nsrr-8.0.0` (in my case `C:\Ruby31\lib\ruby\gems\3.1.0\gems\nsrr-8.0.0`)
+   - within this folder or one of the sub folders I found `cert.pem`
+
+#### How to use:
 
 1. `git clone <repo>`
 2. `cd sleep-project`
@@ -12,13 +22,13 @@
 8. Use one of the following:
 
    ```bash
-     python -m sleepdataspo2.process -d shhs -p shhs1 -spo2 SaO2 -df "polysomnography/edfs/shhs1" -dt data -s 200504 -e 200505 -t 2
+     python -m sleepdataspo2.process -d shhs -p shhs1 -spo2 SaO2 -df "polysomnography/edfs/shhs1" -dt data -s 200504 -e 200505 -t 2 -c False
    ```
 
    or
 
    ```bash
-   python -m sleepdataspo2.process -d shhs -p shhs1 -spo2 SaO2 -df "polysomnography/edfs/shhs1" -dt data -l "200315 200317 200313" -t 3
+   python -m sleepdataspo2.process -d shhs -p shhs1 -spo2 SaO2 -df "polysomnography/edfs/shhs1" -dt data -l "200315 200317 200313" -t 3 -c False
    ```
 
 #### Here’s why only server public key `cert.pem` is enough:

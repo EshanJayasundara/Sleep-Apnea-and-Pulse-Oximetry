@@ -17,6 +17,8 @@ from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 from requests.exceptions import ChunkedEncodingError, ConnectionError, Timeout
 from sleepdataspo2 import BASE_URL, MAX_RETRIES
+from tqdm import tqdm
+from colorama import Fore, Style
 
 class DownloaderInterface(ABC):
     @abstractmethod
@@ -50,12 +52,25 @@ class DownloaderNSRR(DownloaderInterface):
         try:
             with session.get(download_url, stream=True, params=params, verify="cert.pem", timeout=60) as response:
                 if response.status_code == 200:
-                    with open(download_loc, 'wb') as f:
+                    total_size = int(response.headers.get('Content-Length', 0))
+                    blue = Fore.BLUE  # ANSI for sky blue
+                    reset = Style.RESET_ALL
+                    with open(download_loc, 'wb') as f, tqdm(
+                        total=total_size,
+                        unit='B',
+                        unit_scale=True,
+                        desc=f"{blue}Downloading {file_name}.edf{reset}",
+                        bar_format="{desc} |{bar}| {percentage:3.0f}% {elapsed}",
+                        ascii=False,  # minimal-style bar false
+                        ncols=60,     # small width
+                        colour="blue",
+                    ) as pbar:
                         for chunk in response.iter_content(chunk_size=8192):
                             if chunk:
                                 f.write(chunk)
+                                pbar.update(len(chunk))
                     partial = False
-                    print(f"✔ Downloaded: {download_loc} ({os.path.getsize(download_loc)} bytes)")
+                    print(f"[✔] Downloaded: {download_loc} ({os.path.getsize(download_loc)} bytes)")
                 elif response.status_code == 302:
                     error = "Token Not Authorized to Access Specified File"
                 else:
@@ -71,9 +86,9 @@ class DownloaderNSRR(DownloaderInterface):
         finally:
             if partial and os.path.exists(download_loc):
                 os.remove(download_loc)
-                print(f"✘ Partial file removed: {download_loc}")
+                print(f"[✘] Partial file removed: {download_loc}")
             if error:
-                print(f"✘ Download failed: {error}")
+                print(f"[✘] Download failed: {error}")
                 return "fail"
 
         return os.path.getsize(download_loc)

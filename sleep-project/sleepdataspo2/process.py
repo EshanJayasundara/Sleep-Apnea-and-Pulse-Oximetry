@@ -85,6 +85,14 @@ def main():
         help="Number of maximum threds to speedup downlods"
     )
 
+    parser.add_argument(
+        "-c", "--complex_features",
+        type=bool,
+        required=False,
+        default=False,
+        help="Whether to calculate time eating complex features"
+    )
+
     # Parse the command line arguments
     args = parser.parse_args()
     # Args validation
@@ -121,7 +129,8 @@ def main():
         download_from=args.download_from,
         download_to=args.download_to,
         spo2_channel_name=args.spo2_channel_name,
-        max_threads=args.max_threads
+        max_threads=args.max_threads,
+        complex_features=args.complex_features,
         )
 
 if __name__ == "__main__":
