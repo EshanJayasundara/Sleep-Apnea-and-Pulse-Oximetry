@@ -11,3 +11,4 @@ dist
 sleepdataspo2.egg-info
 data
 venv
+*.json
