@@ -80,10 +80,12 @@ class EngineerOdi(EngineerFeaturesInterface):
         results_statistics = statistics_class.compute(spo2)
         print(f"{light_green}[DEBUG]{reset} Completed computing statistical features")
 
-        prsa_class = PRSAMeasures(PRSA_Window=10, K_AC=2)
+        prsa_class_10 = PRSAMeasures(PRSA_Window=10, K_AC=2)
+        prsa_class_20 = PRSAMeasures(PRSA_Window=20, K_AC=2)
         # Compute the biomarkers
         print(f"{light_green}[DEBUG]{reset} Computing prsa periodicity features")
-        results_PRSA = prsa_class.compute(spo2)
+        results_PRSA_10 = prsa_class_10.compute(spo2)
+        results_PRSA_20 = prsa_class_20.compute(spo2)
         print(f"{light_green}[DEBUG]{reset} Completed computing prsa periodicity features")
 
         psd_class = PSDMeasures()
@@ -219,14 +221,24 @@ class EngineerOdi(EngineerFeaturesInterface):
             "DI": results_statistics.DI,                   # Delta Index
 
             # PRSA features (Phase Rectified Signal Averaging)
-            "PRSAc": results_PRSA.PRSAc,             # PRSA capacity
-            "PRSAad": results_PRSA.PRSAad,           # PRSA amplitude difference
-            "PRSAos": results_PRSA.PRSAos,           # PRSA overall slope
-            "PRSAsb": results_PRSA.PRSAsb,           # PRSA slope before anchor point
-            "PRSAsa": results_PRSA.PRSAsa,           # PRSA slope after anchor point
+            "PRSAc_win10": results_PRSA_10.PRSAc,             # PRSA capacity
+            "PRSAad_win10": results_PRSA_10.PRSAad,           # PRSA amplitude difference
+            "PRSAos_win10": results_PRSA_10.PRSAos,           # PRSA overall slope
+            "PRSAsb_win10": results_PRSA_10.PRSAsb,           # PRSA slope before anchor point
+            "PRSAsa_win10": results_PRSA_10.PRSAsa,           # PRSA slope after anchor point
 
             # Autocorrelation
-            "AC": results_PRSA.AC,                   # Autocorrelation of the signal
+            "AC_win10": results_PRSA_10.AC,                   # Autocorrelation of the signal
+
+            # PRSA features (Phase Rectified Signal Averaging)
+            "PRSAc_win20": results_PRSA_20.PRSAc,             # PRSA capacity
+            "PRSAad_win20": results_PRSA_20.PRSAad,           # PRSA amplitude difference
+            "PRSAos_win20": results_PRSA_20.PRSAos,           # PRSA overall slope
+            "PRSAsb_win20": results_PRSA_20.PRSAsb,           # PRSA slope before anchor point
+            "PRSAsa_win20": results_PRSA_20.PRSAsa,           # PRSA slope after anchor point
+
+            # Autocorrelation
+            "AC_win20": results_PRSA_20.AC,                   # Autocorrelation of the signal
 
             # Power spectral density features
             "PSD_total": results_PSD.PSD_total,     # Total amplitude of the power spectrum
