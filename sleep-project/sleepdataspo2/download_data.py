@@ -6,6 +6,7 @@ Last Modified: 2025/06/29 by Eshan Jayasundara
 """
 
 from abc import ABC, abstractmethod
+import certifi
 import traceback
 import requests
 import os
@@ -50,7 +51,8 @@ class DownloaderNSRR(DownloaderInterface):
         session.mount("https://", adapter)
 
         try:
-            with session.get(download_url, stream=True, params=params, verify="cert.pem", timeout=60) as response:
+            # with session.get(download_url, stream=True, params=params, verify="cert.pem", timeout=60) as response:
+            with session.get(download_url, stream=True, params=params, verify=certifi.where(), timeout=60) as response:
                 if response.status_code == 200:
                     total_size = int(response.headers.get('Content-Length', 0))
                     blue = Fore.BLUE  # ANSI for sky blue

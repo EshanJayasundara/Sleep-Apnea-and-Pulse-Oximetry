@@ -23,10 +23,6 @@ If you need to use the package directly see the section <a href="#requirements">
 
 1. `miniconda` or any other virtual environment with `python 3.8` installed
 2. `.env` which contains `NSRR_TOKEN` acqurerd from `sleepdata.org` upon request
-3. `cert.pem` which used to verify the identity of the server. Acquired from following steps:
-   - Head to `https://github.com/nsrr/nsrr-gem/blob/master/README.md#prerequisites`
-   - install ruby and don't follow the instructions in the above page under section `usage`
-   - after `gem install nsrr`, you may find `Ruby31\ssl\cert.pem` (in my case `C:\Ruby31\ssl\cert.pem`)
 
 #### How to use:
 
