@@ -1,6 +1,6 @@
 # Sleep Apnea and Pulse Oximetry
 
-## 1. Python Package for Preprocess and Extract Features from SpO2 Signals
+## 1. Python Package for Downloading NARR Datasets, Preprocessing, and Extracting Features from SpO2 Signals
 
 Package named `sleepdataspo2` is dedicated to download datasets from NSRR and preprocess the SpO2 signal. And extract the features described [here](https://static-content.springer.com/esm/art%3A10.1038%2Fs41467-023-40604-3/MediaObjects/41467_2023_40604_MOESM1_ESM.pdf).
 
