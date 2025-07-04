@@ -1,4 +1,4 @@
-## 1. Python Package for Downloading NARR Datasets, Preprocessing, and Extracting Features from SpO2 Signals
+## Python Package for Downloading NARR Datasets, Preprocessing, and Extracting Features from SpO2 Signals
 
 Package named `sleepdataspo2` is dedicated to download datasets from NSRR and preprocess the SpO2 signal. And extract the features described in `https://oximetry-toolbox.readthedocs.io/en/latest/pobm.obm.html`.
 
