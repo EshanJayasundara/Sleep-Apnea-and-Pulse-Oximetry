@@ -35,18 +35,18 @@ If you need to use the package directly see the section <a href="#requirements">
 
     **Command Line Arguments**
 
-    | Short | Long                  | Type   | Required | Default  | Description                                                            |
-    | ----- | --------------------- | ------ | -------- | -------- | ---------------------------------------------------------------------- |
-    | `-d`  | `--dataset`           | `str`  | ✅ Yes   | –        | Short name of the dataset in [sleepdata.org](https://sleepdata.org)    |
-    | `-p`  | `--prefix`            | `str`  | ✅ Yes   | –        | Prefix before the ID of the EDF file                                   |
-    | spo2  | `--spo2_channel_name` | `str`  | ❌ No    | `"SaO2"` | SpO₂ channel name in the EDF file (column name of the signal)          |
-    | `-df` | `--download_from`     | `str`  | ✅ Yes   | –        | File path on the NSRR website                                          |
-    | `-dt` | `--download_to`       | `str`  | ✅ Yes   | –        | Local path where the files will be downloaded                          |
-    | `-s`  | `--start`             | `int`  | ❌ No    | `None`   | Start index for downloading files (used when `--list` is not provided) |
-    | `-e`  | `--end`               | `int`  | ❌ No    | `None`   | End index for downloading files (used when `--list` is not provided)   |
-    | `-l`  | `--list`              | `str`  | ❌ No    | `None`   | Space-separated list of file IDs to download                           |
-    | `-t`  | `--max_threads`       | `int`  | ❌ No    | `5`      | Maximum number of threads for concurrent downloads                     |
-    | `-c`  | `--complex_features`  | `bool` | ❌ No    | `False`  | Whether to calculate time-consuming complex features                   |
+    | Short   | Long                  | Type   | Required | Default  | Description                                                            |
+    | ------- | --------------------- | ------ | -------- | -------- | ---------------------------------------------------------------------- |
+    | `-d`    | `--dataset`           | `str`  | ✅ Yes   | –        | Short name of the dataset in [sleepdata.org](https://sleepdata.org)    |
+    | `-p`    | `--prefix`            | `str`  | ✅ Yes   | –        | Prefix before the ID of the EDF file                                   |
+    | `-spo2` | `--spo2_channel_name` | `str`  | ❌ No    | `"SaO2"` | SpO₂ channel name in the EDF file (column name of the signal)          |
+    | `-df`   | `--download_from`     | `str`  | ✅ Yes   | –        | File path on the NSRR website                                          |
+    | `-dt`   | `--download_to`       | `str`  | ✅ Yes   | –        | Local path where the files will be downloaded                          |
+    | `-s`    | `--start`             | `int`  | ❌ No    | `None`   | Start index for downloading files (used when `--list` is not provided) |
+    | `-e`    | `--end`               | `int`  | ❌ No    | `None`   | End index for downloading files (used when `--list` is not provided)   |
+    | `-l`    | `--list`              | `str`  | ❌ No    | `None`   | Space-separated list of file IDs to download                           |
+    | `-t`    | `--max_threads`       | `int`  | ❌ No    | `5`      | Maximum number of threads for concurrent downloads                     |
+    | `-c`    | `--complex_features`  | `bool` | ❌ No    | `False`  | Whether to calculate time-consuming complex features                   |
 
     - Use `-s` and `-e` when you have to run in consecutive order.
     - Otherwise use `-l`.
