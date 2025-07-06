@@ -240,28 +240,15 @@ If you need to use the package directly see the section <a href="#requirements">
        python -m sleepdataspo2.engineer -d shhs -p shhs1 -spo2 SaO2 -df "polysomnography/edfs/shhs1" -dt data -l "200001 200003 200007" -t 3
        ```
 
-#### Folder Structure After Following above Steps
+#### Folder Structure Inside `usage` Directory After Following above Steps
 
 ```bash
 Sleep-Apnea-and-Pulse-Oximetry
 ├── LICENSE
 ├── README.md
 ├── sleep-project
-│   ├── README.md
-│   ├── pyproject.toml
-│   └── sleepdataspo2               # 📦 Core processing package for sleep data
-│       ├── __init__.py
-│       ├── clean_features.py       # Cleans raw features
-│       ├── constants.py            # Stores global constants
-│       ├── download_data.py        # Downloads raw EDF files
-│       ├── engineer_features.py    # Creates complex features from signals
-│       ├── load_data.py            # Loads datasets into memory
-│       ├── plot_graphs.py          # Graphing utilities for visualization
-│       ├── process.py              # Main data processing pipeline
-│       └── run_pipeline.py         # Entry point to run full pipeline
 └── usage
     ├── INSTRUCTIONS.md
-    ├── cert.pem
     ├── data                        # 📂 Main dataset storage (raw and processed)
     │   ├── cfs                     # 🧪 Canadian Frailty Study (CFS) dataset
     │   │   ├── images              # 📊 Exported image plots
