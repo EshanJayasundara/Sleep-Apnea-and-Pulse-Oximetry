@@ -55,7 +55,7 @@ class PandasDataLoader(DataLoaderInterface):
         if not file_path.endswith(".parquet"):
             raise ValueError("Invalid extension! `.parquet` is required.")
         try:
-            df = pd.read_parquet(filepath_or_buffer=file_path)
+            df = pd.read_parquet(path=file_path)
         except Exception as e:
             print("Error reading PARQUET file:")
             print(f"{self.__class__}/read_parquet", e)

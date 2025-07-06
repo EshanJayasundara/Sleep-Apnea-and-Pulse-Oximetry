@@ -1,6 +1,6 @@
 ## Python Package for Downloading NARR Datasets, Preprocessing, and Extracting Features from SpO2 Signals
 
-Package named `sleepdataspo2` is dedicated to download datasets from NSRR and preprocess the SpO2 signal. And extract the features described in `https://oximetry-toolbox.readthedocs.io/en/latest/pobm.obm.html`.
+Package named `sleepdataspo2` is dedicated to download datasets from NSRR and preprocess the SpO2 signal. And extract the features described [here](https://static-content.springer.com/esm/art%3A10.1038%2Fs41467-023-40604-3/MediaObjects/41467_2023_40604_MOESM1_ESM.pdf).
 
 If you need to use the package directly see the section <a href="#requirements">Requirements</a>.
 
@@ -31,9 +31,27 @@ If you need to use the package directly see the section <a href="#requirements">
 5.  `pip install dist/sleepdataspo2-0.1.0-py3-none-any.whl`
 6.  `cd ../usage`
 7.  place `.env` (which contains `NSRR_TOKEN`) and `cert.pem` (which used to verify the identity of the server. Since we only download files we don't need a private key) files into `usage` folder.
-8.  Use one of the following:
+8.  Refer the following instructions:
 
-    **commands**
+    **Command Line Arguments**
+
+    | Short | Long                  | Type   | Required | Default  | Description                                                            |
+    | ----- | --------------------- | ------ | -------- | -------- | ---------------------------------------------------------------------- |
+    | `-d`  | `--dataset`           | `str`  | ✅ Yes   | –        | Short name of the dataset in [sleepdata.org](https://sleepdata.org)    |
+    | `-p`  | `--prefix`            | `str`  | ✅ Yes   | –        | Prefix before the ID of the EDF file                                   |
+    |       | `--spo2_channel_name` | `str`  | ❌ No    | `"SaO2"` | SpO₂ channel name in the EDF file (column name of the signal)          |
+    | `-df` | `--download_from`     | `str`  | ✅ Yes   | –        | File path on the NSRR website                                          |
+    | `-dt` | `--download_to`       | `str`  | ✅ Yes   | –        | Local path where the files will be downloaded                          |
+    | `-s`  | `--start`             | `int`  | ❌ No    | `None`   | Start index for downloading files (used when `--list` is not provided) |
+    | `-e`  | `--end`               | `int`  | ❌ No    | `None`   | End index for downloading files (used when `--list` is not provided)   |
+    | `-l`  | `--list`              | `str`  | ❌ No    | `None`   | Space-separated list of file IDs to download                           |
+    | `-t`  | `--max_threads`       | `int`  | ❌ No    | `5`      | Maximum number of threads for concurrent downloads                     |
+    | `-c`  | `--complex_features`  | `bool` | ❌ No    | `False`  | Whether to calculate time-consuming complex features                   |
+
+    - Use `-s` and `-e` when you have to run in consecutive order.
+    - Otherwise use `-l`.
+
+    **commands to run entire pipeline**
 
     ```bash
       python -m sleepdataspo2.process \
@@ -57,36 +75,207 @@ If you need to use the package directly see the section <a href="#requirements">
              -spo2 <spo2_signal_channel_name> \
              -df <download_from> \
              -dt <download_to> \
-             -l <list> \
+             -l "<subject_id_1> <subject_id_2>" \
              -t <max_threads> \
              -c <complex_features>
     ```
 
-    **Command Line Arguments**
+    **commands to run each step seperately**
 
-    | Short | Long                  | Type   | Required | Default  | Description                                                            |
-    | ----- | --------------------- | ------ | -------- | -------- | ---------------------------------------------------------------------- |
-    | `-d`  | `--dataset`           | `str`  | ✅ Yes   | –        | Short name of the dataset in [sleepdata.org](https://sleepdata.org)    |
-    | `-p`  | `--prefix`            | `str`  | ✅ Yes   | –        | Prefix before the ID of the EDF file                                   |
-    |       | `--spo2_channel_name` | `str`  | ❌ No    | `"SaO2"` | SpO₂ channel name in the EDF file (column name of the signal)          |
-    | `-df` | `--download_from`     | `str`  | ✅ Yes   | –        | File path on the NSRR website                                          |
-    | `-dt` | `--download_to`       | `str`  | ✅ Yes   | –        | Local path where the files will be downloaded                          |
-    | `-s`  | `--start`             | `int`  | ❌ No    | `None`   | Start index for downloading files (used when `--list` is not provided) |
-    | `-e`  | `--end`               | `int`  | ❌ No    | `None`   | End index for downloading files (used when `--list` is not provided)   |
-    | `-l`  | `--list`              | `str`  | ❌ No    | `None`   | Space-separated list of file IDs to download                           |
-    | `-t`  | `--max_threads`       | `int`  | ❌ No    | `5`      | Maximum number of threads for concurrent downloads                     |
-    | `-c`  | `--complex_features`  | `bool` | ❌ No    | `False`  | Whether to calculate time-consuming complex features                   |
+    1. Download
 
-    **Example Usage:**
+       ```bash
+       python -m sleepdataspo2.download \
+               -d <dataset> \
+               -p <prefix> \
+               -df "<download_from>" \
+               -dt <download_to> \
+               -l "<subject_id_1> <subject_id_2>" \
+               -t <max_threads>
+       ```
 
-    ```bash
+       or
 
-    python -m sleepdataspo2.process -d shhs -p shhs1 -spo2 SaO2 -df "polysomnography/edfs/shhs1" -dt data -s 200001 -e 200005 -t 2
+       ```bash
+       python -m sleepdataspo2.download \
+               -d <dataset> \
+               -p <prefix> \
+               -df "<download_from>" \
+               -dt <download_to> \
+               -s <start_index> \
+               -e <end_index> \
+               -t <max_threads>
+       ```
 
-    ```
+    2. Clean
 
-    or
+       ```bash
+       python -m sleepdataspo2.clean \
+               -d <dataset> \
+               -p <prefix> \
+               -spo2 <spo2_channel_name> \
+               -df "<download_from>" \
+               -dt <download_to> \
+               -l "<subject_id_1> <subject_id_2>" \
+               -t <max_threads>
+       ```
 
-    ```bash
-    python -m sleepdataspo2.process -d shhs -p shhs1 -spo2 SaO2 -df "polysomnography/edfs/shhs1" -dt data -l "200001 200003 200007" -t 3
-    ```
+       or
+
+       ```bash
+       python -m sleepdataspo2.clean \
+               -d <dataset> \
+               -p <prefix> \
+               -spo2 <spo2_channel_name> \
+               -df "<download_from>" \
+               -dt <download_to> \
+               -s <start_index> \
+               -e <end_index> \
+               -t <max_threads>
+       ```
+
+    3. Flush
+
+       ```bash
+       python -m sleepdataspo2.flush \
+               -d <dataset> \
+               -p <prefix> \
+               -df "<download_from>" \
+               -dt <download_to> \
+               -l "<subject_id_1> <subject_id_2>" \
+               -t <max_threads>
+       ```
+
+       or
+
+       ```bash
+       python -m sleepdataspo2.flush \
+               -d <dataset> \
+               -p <prefix> \
+               -df "<download_from>" \
+               -dt <download_to> \
+               -s <start_index> \
+               -e <end_index> \
+               -t <max_threads>
+       ```
+
+    4. Enginer
+
+       ```bash
+       python -m sleepdataspo2.engineer \
+               -d <dataset> \
+               -p <prefix> \
+               -spo2 <spo2_channel_name> \
+               -df "<download_from>" \
+               -dt <download_to> \
+               -l "<subject_id_1> <subject_id_2>" \
+               -t <max_threads> \
+               -c <complex_features>
+       ```
+
+       or
+
+       ```bash
+       python -m sleepdataspo2.engineer \
+               -d <dataset> \
+               -p <prefix> \
+               -spo2 <spo2_channel_name> \
+               -df "<download_from>" \
+               -dt <download_to> \
+               -s <start_index> \
+               -e <end_index> \
+               -t <max_threads> \
+               -c <complex_features>
+       ```
+
+    **Example Usage: all at once**
+
+    1. With `-s` and `-e`
+
+       ```bash
+       python -m sleepdataspo2.process -d shhs -p shhs1 -spo2 SaO2 -df "polysomnography/edfs/shhs1" -dt data -s 200001 -e 200005 -t 2
+       ```
+
+    2. Or with `-l`
+
+       ```bash
+       python -m sleepdataspo2.process -d shhs -p shhs1 -spo2 SaO2 -df "polysomnography/edfs/shhs1" -dt data -l "200001 200003 200007" -t 3
+       ```
+
+    **Example Usage: one by one**
+
+    1. With `-s` and `-e`
+
+       ```bash
+       python -m sleepdataspo2.download -d shhs -p shhs1 -df "polysomnography/edfs/shhs1" -dt data -s 200001 -e 200005 -t 5
+       ```
+
+       ```bash
+       python -m sleepdataspo2.clean -d shhs -p shhs1 -spo2 SaO2 -df "polysomnography/edfs/shhs1" -dt data -s 200001 -e 200005 -t 5
+       ```
+
+       ```bash
+       python -m sleepdataspo2.flush -d shhs -p shhs1 -df "polysomnography/edfs/shhs1" -dt data -s 200001 -e 200005 -t 5
+       ```
+
+       ```bash
+       python -m sleepdataspo2.engineer -d shhs -p shhs1 -spo2 SaO2 -df "polysomnography/edfs/shhs1" -dt data -s 200001 -e 200005 -t 5
+       ```
+
+    2. Or with `-l`
+
+       ```bash
+       python -m sleepdataspo2.download -d shhs -p shhs1 -df "polysomnography/edfs/shhs1" -dt data -l "200001 200003 200007" -t 3
+       ```
+
+       ```bash
+       python -m sleepdataspo2.clean -d shhs -p shhs1 -spo2 SaO2 -df "polysomnography/edfs/shhs1" -dt data -l "200001 200003 200007" -t 3
+       ```
+
+       ```bash
+       python -m sleepdataspo2.flush -d shhs -p shhs1 -df "polysomnography/edfs/shhs1" -dt data -l "200001 200003 200007" -t 3
+       ```
+
+       ```bash
+       python -m sleepdataspo2.engineer -d shhs -p shhs1 -spo2 SaO2 -df "polysomnography/edfs/shhs1" -dt data -l "200001 200003 200007" -t 3
+       ```
+
+#### Folder Structure After Following above Steps
+
+```bash
+Sleep-Apnea-and-Pulse-Oximetry
+├── LICENSE
+├── README.md
+├── sleep-project
+│   ├── README.md
+│   ├── pyproject.toml
+│   └── sleepdataspo2               # 📦 Core processing package for sleep data
+│       ├── __init__.py
+│       ├── clean_features.py       # Cleans raw features
+│       ├── constants.py            # Stores global constants
+│       ├── download_data.py        # Downloads raw EDF files
+│       ├── engineer_features.py    # Creates complex features from signals
+│       ├── load_data.py            # Loads datasets into memory
+│       ├── plot_graphs.py          # Graphing utilities for visualization
+│       ├── process.py              # Main data processing pipeline
+│       └── run_pipeline.py         # Entry point to run full pipeline
+└── usage
+    ├── INSTRUCTIONS.md
+    ├── cert.pem
+    ├── data                        # 📂 Main dataset storage (raw and processed)
+    │   ├── cfs                     # 🧪 Canadian Frailty Study (CFS) dataset
+    │   │   ├── images              # 📊 Exported image plots
+    │   │   │   ├── cleaned         # Cleaned signal visualizations
+    │   │   │   └── original        # Original signal visualizations
+    │   │   └── polysomnography     # 📈 Sleep signal data
+    │   │       └── edfs            # Raw EDF files
+    │   └── shhs                    # 💤 Sleep Heart Health Study (SHHS) dataset
+    │       ├── images              # 📊 Exported image plots
+    │       │   ├── cleaned         # Cleaned signal visualizations
+    │       │   └── original        # Original signal visualizations
+    │       └── polysomnography     # 📈 Sleep signal data
+    │           └── edfs
+    │               └── shhs1       # EDFs for SHHS1 subset
+    └── sleep_apnea_detection.ipynb # 📓 Example notebook for full pipeline
+
+```

@@ -110,10 +110,7 @@ def main():
         raise ValueError("one of '--start and --end' or --list should be provided")
     
     runner = Run(
-        downloader=DownloaderNSRR(),
         reader=DataLoader(PandasDataLoader()),
-        cleaner=CleanFeatures(CleanSpO2()),
-        plotter=PlotGraphs(PlotGraphsNSRR()),
         engineer=EngineerFeatures(EngineerOdi())
         )
 
@@ -122,16 +119,15 @@ def main():
     else:
         range_list = range(args.start, args.end+1)
 
-    files_to_download = []
+    files_to_engineer = []
     for i in range_list:
-        files_to_download.append(f"{args.prefix}-{i}")
+        files_to_engineer.append(f"{args.prefix}-{i}")
 
-    print(files_to_download)
+    print(files_to_engineer)
     
-    runner.run_all_steps_parallel(
+    runner.run_engineer_parallel(
         dataset=args.dataset, 
-        file_names=files_to_download, 
-        token=os.environ["NSRR_TOKEN"], 
+        file_names=files_to_engineer, 
         download_from=args.download_from,
         download_to=args.download_to,
         spo2_channel_name=args.spo2_channel_name,

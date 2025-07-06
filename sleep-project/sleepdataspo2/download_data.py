@@ -11,9 +11,7 @@ import traceback
 import requests
 import os
 from sleepdataspo2.load_data import *
-from sleepdataspo2.run_pipeline import *
 from typing import List
-from concurrent.futures import ThreadPoolExecutor, as_completed
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 from requests.exceptions import ChunkedEncodingError, ConnectionError, Timeout

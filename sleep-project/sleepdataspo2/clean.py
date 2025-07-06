@@ -85,14 +85,6 @@ def main():
         help="Number of maximum threds to speedup downlods"
     )
 
-    parser.add_argument(
-        "-c", "--complex_features",
-        type=bool,
-        required=False,
-        default=False,
-        help="Whether to calculate time eating complex features"
-    )
-
     # Parse the command line arguments
     args = parser.parse_args()
     # Args validation
@@ -110,11 +102,9 @@ def main():
         raise ValueError("one of '--start and --end' or --list should be provided")
     
     runner = Run(
-        downloader=DownloaderNSRR(),
         reader=DataLoader(PandasDataLoader()),
         cleaner=CleanFeatures(CleanSpO2()),
         plotter=PlotGraphs(PlotGraphsNSRR()),
-        engineer=EngineerFeatures(EngineerOdi())
         )
 
     if args.list:
@@ -122,21 +112,19 @@ def main():
     else:
         range_list = range(args.start, args.end+1)
 
-    files_to_download = []
+    files_to_clean = []
     for i in range_list:
-        files_to_download.append(f"{args.prefix}-{i}")
+        files_to_clean.append(f"{args.prefix}-{i}")
 
-    print(files_to_download)
+    print(files_to_clean)
     
-    runner.run_all_steps_parallel(
+    runner.run_cleaner_parallel(
         dataset=args.dataset, 
-        file_names=files_to_download, 
-        token=os.environ["NSRR_TOKEN"], 
+        file_names=files_to_clean, 
         download_from=args.download_from,
         download_to=args.download_to,
         spo2_channel_name=args.spo2_channel_name,
         max_threads=args.max_threads,
-        complex_features=args.complex_features,
         )
 
 if __name__ == "__main__":
