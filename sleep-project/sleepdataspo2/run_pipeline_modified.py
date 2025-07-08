@@ -8,8 +8,6 @@ Last Modified: 2025/06/29 by Eshan Jayasundara
 from abc import ABC, abstractmethod
 from typing import List
 import pandas as pd
-from sklearn.preprocessing import MinMaxScaler
-import pickle
 import os
 from filelock import FileLock, Timeout
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -151,7 +149,7 @@ class Run(RunInterface):
         lock_path = csv_path + ".lock"
 
         # Extract just the numeric part of the file_name (e.g., "200001" from "shhs1-200001")
-        patient_id = file_name.split("-")[-1]
+        nsrr_id = file_name.split("-")[-1]
 
         # Use a file lock to avoid concurrent write issues
         lock = FileLock(lock_path, timeout=180)  # waits up to 180 seconds
@@ -163,11 +161,17 @@ class Run(RunInterface):
             #       This automatically releases the lock, even if the block was exited due to an error.
             with lock:
                 if os.path.exists(csv_path):
-                    df = pd.read_csv(csv_path, index_col=0)
+                    df = pd.read_csv(csv_path, index_col="nsrrid")
+                    df.index = df.index.astype(str).str.strip()  # enforce string + trim whitespace
+                    df = df[~df.index.duplicated(keep='last')]   # drop any existing duplicates
                 else:
                     df = pd.DataFrame(columns=features.keys())
+                    df.index.name = "nsrrid"
+                    df.index = df.index.astype(str).str.strip()
 
-                df.loc[patient_id] = features
+                df.loc[nsrr_id] = features
+                print(type(nsrr_id))
+                df = df[~df.index.duplicated(keep='last')] # ensure no duplicates
                 df.to_csv(csv_path)
                 print(f"[✔] Updated: {csv_path}")
 
