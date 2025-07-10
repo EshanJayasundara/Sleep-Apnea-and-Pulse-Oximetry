@@ -170,7 +170,7 @@ class Run(RunInterface):
                     df.index = df.index.astype(str).str.strip()
 
                 df.loc[nsrr_id] = features
-                print(type(nsrr_id))
+                # print(type(nsrr_id))
                 df = df[~df.index.duplicated(keep='last')] # ensure no duplicates
                 df.to_csv(csv_path)
                 print(f"[✔] Updated: {csv_path}")

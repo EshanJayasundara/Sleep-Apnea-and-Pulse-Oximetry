@@ -30,7 +30,7 @@ If you need to use the package directly see the section <a href="#requirements">
 4.  `python -m build`
 5.  `pip install dist/sleepdataspo2-0.1.0-py3-none-any.whl`
 6.  `cd ../usage`
-7.  place `.env` (which contains `NSRR_TOKEN`) and `cert.pem` (which used to verify the identity of the server. Since we only download files we don't need a private key) files into `usage` folder.
+7.  place `.env` (which contains `NSRR_TOKEN`) file into `usage` folder.
 8.  Refer the following instructions:
 
     **Command Line Arguments**

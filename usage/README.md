@@ -31,3 +31,6 @@ We further propose a novel deep learning framework based on learned embeddings t
 - `POBM` for digital oximetry biomarkers
 - `Scikit-learn` / `CatBoost` for traditional models
 - `PyTorch` or `TensorFlow` (optional) for embedding-based model
+
+$env:http_proxy = "socks5://127.0.0.1:7999"
+$env:https_proxy = "socks5://127.0.0.1:7999"
