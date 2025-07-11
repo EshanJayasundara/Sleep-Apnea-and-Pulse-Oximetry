@@ -41,6 +41,13 @@ class CleanFeaturesInterface(ABC):
         not_nans = ~nans
         signal[nans] = np.interp(np.flatnonzero(nans), np.flatnonzero(not_nans), signal[not_nans])
         return signal
+    
+    def safe_nan_interp(self, x):
+        """Interpolate and fill start/end NaNs with nearest values."""
+        x = pd.Series(x)
+        x_interp = x.interpolate(method='linear', limit_direction='both')
+        return x_interp.to_numpy()
+
 
 class CleanSpO2(CleanFeaturesInterface):
     def __init__(self):
@@ -76,7 +83,7 @@ class CleanSpO2(CleanFeaturesInterface):
         spo2 = resamp_spo2(spo2, OriginalFreq=original_frequency)
         print(f"{light_green}[DEBUG]{reset} length after downsampling: {spo2.shape[0]}")
         # 6. Interpolate to replace NAN
-        spo2 = super().nan_interp(spo2)
+        spo2 = super().safe_nan_interp(spo2)
 
         spo2_series = pd.Series(spo2)
 
@@ -94,7 +101,8 @@ class CleanSpO2(CleanFeaturesInterface):
             pass
         else:
             pad_len = target_length - spo2_series.shape[0]
-            spo2_series = np.concatenate([spo2_series, 98*np.ones(pad_len)])
+            pad_val = np.nanmean(spo2_series) if not np.isnan(spo2_series).all() else 98
+            spo2_series = np.concatenate([spo2_series, pad_val * np.ones(pad_len)])
         print(f"{light_green}[DEBUG]{reset} length after padding: {spo2_series.shape[0]}")
 
         print(f"[✔] Final signal length (1Hz, {seven_hours_in_sec}): {spo2_series.shape[0]}")

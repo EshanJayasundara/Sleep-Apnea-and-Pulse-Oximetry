@@ -1,1 +1,1 @@
-1. Place the `.env` and `cert.pem` here in this folder.
+1. Place the `.env` here in this folder.
