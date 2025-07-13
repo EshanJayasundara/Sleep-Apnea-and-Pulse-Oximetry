@@ -12,3 +12,4 @@ sleepdataspo2.egg-info
 data
 venv
 *.json
+novel_transformer_embedding.ipynb
