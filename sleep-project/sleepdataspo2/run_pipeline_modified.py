@@ -72,6 +72,16 @@ class Run(RunInterface):
         path = f"{download_to}/{dataset}/{download_from}"
         try:
             df = self._reader.read_edf(file_path=f"{path}/{file_name}.edf")
+            
+            possible_names = ["SaO2", "SpO2", "SPO2", "Sao2", "PulseOx", "OXI_SAT"]
+            for name in possible_names:
+                if name in df.columns:
+                    spo2_channel_name = name
+                    print(f"[ℹ️] Auto-selected SpO2 channel: '{name}'")
+                    break
+            else:
+                raise KeyError(f"No known SpO2 channel found in columns: {df.columns.tolist()}")
+
             df = df[['time', spo2_channel_name]]
             df.to_csv(path_or_buf=f"{path}/{file_name}.csv")
             print(f"[✔] Created: {path}/{file_name}.csv")
@@ -82,6 +92,16 @@ class Run(RunInterface):
         path = f"{download_to}/{dataset}/{download_from}"
         try:
             df = self._reader.read_edf(file_path=f"{path}/{file_name}.edf")
+            
+            possible_names = ["SaO2", "SpO2", "SPO2", "Sao2", "PulseOx", "OXI_SAT"]
+            for name in possible_names:
+                if name in df.columns:
+                    spo2_channel_name = name
+                    print(f"[ℹ️] Auto-selected SpO2 channel: '{name}'")
+                    break
+            else:
+                raise KeyError(f"No known SpO2 channel found in columns: {df.columns.tolist()}")
+
             df = df[['time', spo2_channel_name]]
             df.to_parquet(path=f"{path}/{file_name}.parquet")
             print(f"[✔] Created: {path}/{file_name}.parquet")
@@ -119,7 +139,16 @@ class Run(RunInterface):
         if 1 / intervals.iloc[0] != int(1 / intervals.iloc[0]):
             raise ValueError(f"original_frequency = {1 / intervals.iloc[0]} is impossible. It should be an integer.")
         original_frequency = int(1 / intervals.iloc[0])
-
+        
+        possible_names = ["SaO2", "SpO2", "SPO2", "Sao2", "PulseOx", "OXI_SAT"]
+        for name in possible_names:
+            if name in df.columns:
+                spo2_channel_name = name
+                print(f"[ℹ️] Auto-selected SpO2 channel: '{name}'")
+                break
+        else:
+            raise KeyError(f"No known SpO2 channel found in columns: {df.columns.tolist()}")
+        
         spo2 = self._cleaner.clean_single(df[spo2_channel_name], original_frequency)
 
         name = file_name.split(".")[0]
@@ -142,6 +171,15 @@ class Run(RunInterface):
             df = self._reader.read_parquet(file_path=file_path)
         else:
             raise FileNotFoundError(f"{file_path} does not exists...")
+        
+        possible_names = ["SaO2", "SpO2", "SPO2", "Sao2", "PulseOx", "OXI_SAT"]
+        for name in possible_names:
+            if name in df.columns:
+                spo2_channel_name = name
+                print(f"[ℹ️] Auto-selected SpO2 channel: '{name}'")
+                break
+        else:
+            raise KeyError(f"No known SpO2 channel found in columns: {df.columns.tolist()}")
         
         features = self._engineer.compute_single(spo2=df[spo2_channel_name], complex_features=complex_features)
         

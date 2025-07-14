@@ -13,3 +13,4 @@ data
 venv
 *.json
 novel_transformer_embedding.ipynb
+*.pth
